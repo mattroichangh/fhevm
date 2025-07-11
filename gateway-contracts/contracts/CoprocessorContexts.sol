@@ -338,9 +338,9 @@ contract CoprocessorContexts is ICoprocessorContexts, Ownable2StepUpgradeable, U
     }
 
     /**
-     * @dev See {ICoprocessorContexts-getCoprocessorContextActivationBlockTimestamp}.
+     * @dev See {ICoprocessorContexts-getCoprocessorActivationBlockTimestampFromContext}.
      */
-    function getCoprocessorContextActivationBlockTimestamp(
+    function getCoprocessorActivationBlockTimestampFromContext(
         uint256 contextId
     ) external view virtual ensureContextInitialized(contextId) returns (uint256) {
         CoprocessorContextsStorage storage $ = _getCoprocessorContextsStorage();
@@ -348,9 +348,9 @@ contract CoprocessorContexts is ICoprocessorContexts, Ownable2StepUpgradeable, U
     }
 
     /**
-     * @dev See {ICoprocessorContexts-getCoprocessorContextDeactivatedBlockTimestamp}.
+     * @dev See {ICoprocessorContexts-getCoprocessorDeactivatedBlockTimestampFromContext}.
      */
-    function getCoprocessorContextDeactivatedBlockTimestamp(
+    function getCoprocessorDeactivatedBlockTimestampFromContext(
         uint256 contextId
     ) external view virtual ensureContextInitialized(contextId) returns (uint256) {
         CoprocessorContextsStorage storage $ = _getCoprocessorContextsStorage();

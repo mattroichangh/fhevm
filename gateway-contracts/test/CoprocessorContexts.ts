@@ -274,7 +274,7 @@ describe("CoprocessorContexts", function () {
           const latestBlockTimestamp = await time.latest();
 
           const activationBlockTimestamp =
-            await coprocessorContexts.getCoprocessorContextActivationBlockTimestamp(newContextId);
+            await coprocessorContexts.getCoprocessorActivationBlockTimestampFromContext(newContextId);
 
           const expectedActivationBlockTimestamp =
             BigInt(latestBlockTimestamp) + BigInt(timePeriods.preActivationTimePeriod);
@@ -290,7 +290,7 @@ describe("CoprocessorContexts", function () {
           const latestBlockTimestamp = await time.latest();
 
           const deactivatedBlockTimestamp =
-            await coprocessorContexts.getCoprocessorContextDeactivatedBlockTimestamp(contextId);
+            await coprocessorContexts.getCoprocessorDeactivatedBlockTimestampFromContext(contextId);
 
           const expectedDeactivatedBlockTimestamp =
             BigInt(latestBlockTimestamp) + BigInt(timePeriods.suspendedTimePeriod);

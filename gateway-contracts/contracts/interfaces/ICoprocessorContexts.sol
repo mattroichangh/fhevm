@@ -237,14 +237,14 @@ interface ICoprocessorContexts {
      * @param contextId The coprocessor context ID.
      * @return The activation block timestamp.
      */
-    function getCoprocessorContextActivationBlockTimestamp(uint256 contextId) external view returns (uint256);
+    function getCoprocessorActivationBlockTimestampFromContext(uint256 contextId) external view returns (uint256);
 
     /**
      * @notice Get the block timestamp at which the coprocessor context is deactivated.
      * @param contextId The coprocessor context ID.
      * @return The deactivation block timestamp.
      */
-    function getCoprocessorContextDeactivatedBlockTimestamp(uint256 contextId) external view returns (uint256);
+    function getCoprocessorDeactivatedBlockTimestampFromContext(uint256 contextId) external view returns (uint256);
 
     /**
      * @notice Get the coprocessor majority threshold for a coprocessor context.
@@ -277,7 +277,6 @@ interface ICoprocessorContexts {
      * @return The list of coprocessors' signer addresses from a context.
      */
     function getCoprocessorSignersFromContext(uint256 contextId) external view returns (address[] memory);
-
 
     /**
      * @notice Get the context status of a coprocessor context.

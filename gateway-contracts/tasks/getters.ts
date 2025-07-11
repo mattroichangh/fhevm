@@ -20,7 +20,9 @@ async function loadCoprocessorContextsContract(
   customCoprocessorContextsAddress: string | undefined,
   ethers: HardhatEthersHelpers,
 ): Promise<CoprocessorContexts> {
-  const coprocessorContextsFactory = await ethers.getContractFactory("./contracts/CoprocessorContexts.sol:CoprocessorContexts");
+  const coprocessorContextsFactory = await ethers.getContractFactory(
+    "./contracts/CoprocessorContexts.sol:CoprocessorContexts",
+  );
   const coprocessorContextsAddress = customCoprocessorContextsAddress
     ? customCoprocessorContextsAddress
     : dotenv.parse(fs.readFileSync("addresses/.env.coprocessor_contexts")).COPROCESSOR_CONTEXTS_ADDRESS;
@@ -44,7 +46,10 @@ task("task:getCoprocessorSigners")
     "Use a custom address for the CoprocessorContexts contract instead of the default one - ie stored inside .env.coprocessor_contexts",
   )
   .setAction(async function (taskArguments: TaskArguments, { ethers }) {
-    const coprocessorContexts = await loadCoprocessorContextsContract(taskArguments.customCoprocessorContextsAddress, ethers);
+    const coprocessorContexts = await loadCoprocessorContextsContract(
+      taskArguments.customCoprocessorContextsAddress,
+      ethers,
+    );
     const activeContextId = await coprocessorContexts.getActiveCoprocessorContextId();
     const listCurrentCoprocessorSigners = await coprocessorContexts.getCoprocessorSignersFromContext(activeContextId);
     console.log(

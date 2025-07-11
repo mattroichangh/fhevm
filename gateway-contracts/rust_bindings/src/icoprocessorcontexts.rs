@@ -48,14 +48,13 @@ interface ICoprocessorContexts {
     function destroyCoprocessorContext(uint256 contextId) external;
     function getActiveCoprocessorContext() external view returns (CoprocessorContext memory);
     function getActiveCoprocessorContextId() external view returns (uint256);
-    function getCoprocessor(address coprocessorTxSenderAddress) external view returns (Coprocessor memory);
-    function getCoprocessorContextActivationBlockTimestamp(uint256 contextId) external view returns (uint256);
-    function getCoprocessorContextDeactivatedBlockTimestamp(uint256 contextId) external view returns (uint256);
+    function getCoprocessorActivationBlockTimestampFromContext(uint256 contextId) external view returns (uint256);
     function getCoprocessorContextStatus(uint256 contextId) external view returns (ContextStatus);
+    function getCoprocessorDeactivatedBlockTimestampFromContext(uint256 contextId) external view returns (uint256);
     function getCoprocessorFromContext(uint256 contextId, address coprocessorTxSenderAddress) external view returns (Coprocessor memory);
     function getCoprocessorMajorityThresholdFromContext(uint256 contextId) external view returns (uint256);
-    function getCoprocessorSigners() external view returns (address[] memory);
-    function getCoprocessorTxSenders() external view returns (address[] memory);
+    function getCoprocessorSignersFromContext(uint256 contextId) external view returns (address[] memory);
+    function getCoprocessorTxSendersFromContext(uint256 contextId) external view returns (address[] memory);
     function getPreActivationCoprocessorContextId() external view returns (uint256);
     function getSuspendedCoprocessorContextId() external view returns (uint256);
     function getVersion() external pure returns (string memory);
@@ -259,67 +258,7 @@ interface ICoprocessorContexts {
   },
   {
     "type": "function",
-    "name": "getCoprocessor",
-    "inputs": [
-      {
-        "name": "coprocessorTxSenderAddress",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "tuple",
-        "internalType": "struct Coprocessor",
-        "components": [
-          {
-            "name": "name",
-            "type": "string",
-            "internalType": "string"
-          },
-          {
-            "name": "txSenderAddress",
-            "type": "address",
-            "internalType": "address"
-          },
-          {
-            "name": "signerAddress",
-            "type": "address",
-            "internalType": "address"
-          },
-          {
-            "name": "s3BucketUrl",
-            "type": "string",
-            "internalType": "string"
-          }
-        ]
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "getCoprocessorContextActivationBlockTimestamp",
-    "inputs": [
-      {
-        "name": "contextId",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "getCoprocessorContextDeactivatedBlockTimestamp",
+    "name": "getCoprocessorActivationBlockTimestampFromContext",
     "inputs": [
       {
         "name": "contextId",
@@ -351,6 +290,25 @@ interface ICoprocessorContexts {
         "name": "",
         "type": "uint8",
         "internalType": "enum ContextStatus"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getCoprocessorDeactivatedBlockTimestampFromContext",
+    "inputs": [
+      {
+        "name": "contextId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "stateMutability": "view"
@@ -422,8 +380,14 @@ interface ICoprocessorContexts {
   },
   {
     "type": "function",
-    "name": "getCoprocessorSigners",
-    "inputs": [],
+    "name": "getCoprocessorSignersFromContext",
+    "inputs": [
+      {
+        "name": "contextId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
     "outputs": [
       {
         "name": "",
@@ -435,8 +399,14 @@ interface ICoprocessorContexts {
   },
   {
     "type": "function",
-    "name": "getCoprocessorTxSenders",
-    "inputs": [],
+    "name": "getCoprocessorTxSendersFromContext",
+    "inputs": [
+      {
+        "name": "contextId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
     "outputs": [
       {
         "name": "",
@@ -4553,302 +4523,22 @@ function getActiveCoprocessorContextId() external view returns (uint256);
     };
     #[derive(serde::Serialize, serde::Deserialize)]
     #[derive(Default, Debug, PartialEq, Eq, Hash)]
-    /**Function with signature `getCoprocessor(address)` and selector `0xef6997f9`.
+    /**Function with signature `getCoprocessorActivationBlockTimestampFromContext(uint256)` and selector `0xa94a02ad`.
 ```solidity
-function getCoprocessor(address coprocessorTxSenderAddress) external view returns (Coprocessor memory);
+function getCoprocessorActivationBlockTimestampFromContext(uint256 contextId) external view returns (uint256);
 ```*/
     #[allow(non_camel_case_types, non_snake_case, clippy::pub_underscore_fields)]
     #[derive(Clone)]
-    pub struct getCoprocessorCall {
-        #[allow(missing_docs)]
-        pub coprocessorTxSenderAddress: alloy::sol_types::private::Address,
-    }
-    #[derive(serde::Serialize, serde::Deserialize)]
-    #[derive(Default, Debug, PartialEq, Eq, Hash)]
-    ///Container type for the return parameters of the [`getCoprocessor(address)`](getCoprocessorCall) function.
-    #[allow(non_camel_case_types, non_snake_case, clippy::pub_underscore_fields)]
-    #[derive(Clone)]
-    pub struct getCoprocessorReturn {
-        #[allow(missing_docs)]
-        pub _0: <Coprocessor as alloy::sol_types::SolType>::RustType,
-    }
-    #[allow(
-        non_camel_case_types,
-        non_snake_case,
-        clippy::pub_underscore_fields,
-        clippy::style
-    )]
-    const _: () = {
-        use alloy::sol_types as alloy_sol_types;
-        {
-            #[doc(hidden)]
-            type UnderlyingSolTuple<'a> = (alloy::sol_types::sol_data::Address,);
-            #[doc(hidden)]
-            type UnderlyingRustTuple<'a> = (alloy::sol_types::private::Address,);
-            #[cfg(test)]
-            #[allow(dead_code, unreachable_patterns)]
-            fn _type_assertion(
-                _t: alloy_sol_types::private::AssertTypeEq<UnderlyingRustTuple>,
-            ) {
-                match _t {
-                    alloy_sol_types::private::AssertTypeEq::<
-                        <UnderlyingSolTuple as alloy_sol_types::SolType>::RustType,
-                    >(_) => {}
-                }
-            }
-            #[automatically_derived]
-            #[doc(hidden)]
-            impl ::core::convert::From<getCoprocessorCall> for UnderlyingRustTuple<'_> {
-                fn from(value: getCoprocessorCall) -> Self {
-                    (value.coprocessorTxSenderAddress,)
-                }
-            }
-            #[automatically_derived]
-            #[doc(hidden)]
-            impl ::core::convert::From<UnderlyingRustTuple<'_>> for getCoprocessorCall {
-                fn from(tuple: UnderlyingRustTuple<'_>) -> Self {
-                    Self {
-                        coprocessorTxSenderAddress: tuple.0,
-                    }
-                }
-            }
-        }
-        {
-            #[doc(hidden)]
-            type UnderlyingSolTuple<'a> = (Coprocessor,);
-            #[doc(hidden)]
-            type UnderlyingRustTuple<'a> = (
-                <Coprocessor as alloy::sol_types::SolType>::RustType,
-            );
-            #[cfg(test)]
-            #[allow(dead_code, unreachable_patterns)]
-            fn _type_assertion(
-                _t: alloy_sol_types::private::AssertTypeEq<UnderlyingRustTuple>,
-            ) {
-                match _t {
-                    alloy_sol_types::private::AssertTypeEq::<
-                        <UnderlyingSolTuple as alloy_sol_types::SolType>::RustType,
-                    >(_) => {}
-                }
-            }
-            #[automatically_derived]
-            #[doc(hidden)]
-            impl ::core::convert::From<getCoprocessorReturn>
-            for UnderlyingRustTuple<'_> {
-                fn from(value: getCoprocessorReturn) -> Self {
-                    (value._0,)
-                }
-            }
-            #[automatically_derived]
-            #[doc(hidden)]
-            impl ::core::convert::From<UnderlyingRustTuple<'_>>
-            for getCoprocessorReturn {
-                fn from(tuple: UnderlyingRustTuple<'_>) -> Self {
-                    Self { _0: tuple.0 }
-                }
-            }
-        }
-        #[automatically_derived]
-        impl alloy_sol_types::SolCall for getCoprocessorCall {
-            type Parameters<'a> = (alloy::sol_types::sol_data::Address,);
-            type Token<'a> = <Self::Parameters<
-                'a,
-            > as alloy_sol_types::SolType>::Token<'a>;
-            type Return = getCoprocessorReturn;
-            type ReturnTuple<'a> = (Coprocessor,);
-            type ReturnToken<'a> = <Self::ReturnTuple<
-                'a,
-            > as alloy_sol_types::SolType>::Token<'a>;
-            const SIGNATURE: &'static str = "getCoprocessor(address)";
-            const SELECTOR: [u8; 4] = [239u8, 105u8, 151u8, 249u8];
-            #[inline]
-            fn new<'a>(
-                tuple: <Self::Parameters<'a> as alloy_sol_types::SolType>::RustType,
-            ) -> Self {
-                tuple.into()
-            }
-            #[inline]
-            fn tokenize(&self) -> Self::Token<'_> {
-                (
-                    <alloy::sol_types::sol_data::Address as alloy_sol_types::SolType>::tokenize(
-                        &self.coprocessorTxSenderAddress,
-                    ),
-                )
-            }
-            #[inline]
-            fn abi_decode_returns(
-                data: &[u8],
-                validate: bool,
-            ) -> alloy_sol_types::Result<Self::Return> {
-                <Self::ReturnTuple<
-                    '_,
-                > as alloy_sol_types::SolType>::abi_decode_sequence(data, validate)
-                    .map(Into::into)
-            }
-        }
-    };
-    #[derive(serde::Serialize, serde::Deserialize)]
-    #[derive(Default, Debug, PartialEq, Eq, Hash)]
-    /**Function with signature `getCoprocessorContextActivationBlockTimestamp(uint256)` and selector `0x0e78f5f1`.
-```solidity
-function getCoprocessorContextActivationBlockTimestamp(uint256 contextId) external view returns (uint256);
-```*/
-    #[allow(non_camel_case_types, non_snake_case, clippy::pub_underscore_fields)]
-    #[derive(Clone)]
-    pub struct getCoprocessorContextActivationBlockTimestampCall {
+    pub struct getCoprocessorActivationBlockTimestampFromContextCall {
         #[allow(missing_docs)]
         pub contextId: alloy::sol_types::private::primitives::aliases::U256,
     }
     #[derive(serde::Serialize, serde::Deserialize)]
     #[derive(Default, Debug, PartialEq, Eq, Hash)]
-    ///Container type for the return parameters of the [`getCoprocessorContextActivationBlockTimestamp(uint256)`](getCoprocessorContextActivationBlockTimestampCall) function.
+    ///Container type for the return parameters of the [`getCoprocessorActivationBlockTimestampFromContext(uint256)`](getCoprocessorActivationBlockTimestampFromContextCall) function.
     #[allow(non_camel_case_types, non_snake_case, clippy::pub_underscore_fields)]
     #[derive(Clone)]
-    pub struct getCoprocessorContextActivationBlockTimestampReturn {
-        #[allow(missing_docs)]
-        pub _0: alloy::sol_types::private::primitives::aliases::U256,
-    }
-    #[allow(
-        non_camel_case_types,
-        non_snake_case,
-        clippy::pub_underscore_fields,
-        clippy::style
-    )]
-    const _: () = {
-        use alloy::sol_types as alloy_sol_types;
-        {
-            #[doc(hidden)]
-            type UnderlyingSolTuple<'a> = (alloy::sol_types::sol_data::Uint<256>,);
-            #[doc(hidden)]
-            type UnderlyingRustTuple<'a> = (
-                alloy::sol_types::private::primitives::aliases::U256,
-            );
-            #[cfg(test)]
-            #[allow(dead_code, unreachable_patterns)]
-            fn _type_assertion(
-                _t: alloy_sol_types::private::AssertTypeEq<UnderlyingRustTuple>,
-            ) {
-                match _t {
-                    alloy_sol_types::private::AssertTypeEq::<
-                        <UnderlyingSolTuple as alloy_sol_types::SolType>::RustType,
-                    >(_) => {}
-                }
-            }
-            #[automatically_derived]
-            #[doc(hidden)]
-            impl ::core::convert::From<getCoprocessorContextActivationBlockTimestampCall>
-            for UnderlyingRustTuple<'_> {
-                fn from(
-                    value: getCoprocessorContextActivationBlockTimestampCall,
-                ) -> Self {
-                    (value.contextId,)
-                }
-            }
-            #[automatically_derived]
-            #[doc(hidden)]
-            impl ::core::convert::From<UnderlyingRustTuple<'_>>
-            for getCoprocessorContextActivationBlockTimestampCall {
-                fn from(tuple: UnderlyingRustTuple<'_>) -> Self {
-                    Self { contextId: tuple.0 }
-                }
-            }
-        }
-        {
-            #[doc(hidden)]
-            type UnderlyingSolTuple<'a> = (alloy::sol_types::sol_data::Uint<256>,);
-            #[doc(hidden)]
-            type UnderlyingRustTuple<'a> = (
-                alloy::sol_types::private::primitives::aliases::U256,
-            );
-            #[cfg(test)]
-            #[allow(dead_code, unreachable_patterns)]
-            fn _type_assertion(
-                _t: alloy_sol_types::private::AssertTypeEq<UnderlyingRustTuple>,
-            ) {
-                match _t {
-                    alloy_sol_types::private::AssertTypeEq::<
-                        <UnderlyingSolTuple as alloy_sol_types::SolType>::RustType,
-                    >(_) => {}
-                }
-            }
-            #[automatically_derived]
-            #[doc(hidden)]
-            impl ::core::convert::From<
-                getCoprocessorContextActivationBlockTimestampReturn,
-            > for UnderlyingRustTuple<'_> {
-                fn from(
-                    value: getCoprocessorContextActivationBlockTimestampReturn,
-                ) -> Self {
-                    (value._0,)
-                }
-            }
-            #[automatically_derived]
-            #[doc(hidden)]
-            impl ::core::convert::From<UnderlyingRustTuple<'_>>
-            for getCoprocessorContextActivationBlockTimestampReturn {
-                fn from(tuple: UnderlyingRustTuple<'_>) -> Self {
-                    Self { _0: tuple.0 }
-                }
-            }
-        }
-        #[automatically_derived]
-        impl alloy_sol_types::SolCall
-        for getCoprocessorContextActivationBlockTimestampCall {
-            type Parameters<'a> = (alloy::sol_types::sol_data::Uint<256>,);
-            type Token<'a> = <Self::Parameters<
-                'a,
-            > as alloy_sol_types::SolType>::Token<'a>;
-            type Return = getCoprocessorContextActivationBlockTimestampReturn;
-            type ReturnTuple<'a> = (alloy::sol_types::sol_data::Uint<256>,);
-            type ReturnToken<'a> = <Self::ReturnTuple<
-                'a,
-            > as alloy_sol_types::SolType>::Token<'a>;
-            const SIGNATURE: &'static str = "getCoprocessorContextActivationBlockTimestamp(uint256)";
-            const SELECTOR: [u8; 4] = [14u8, 120u8, 245u8, 241u8];
-            #[inline]
-            fn new<'a>(
-                tuple: <Self::Parameters<'a> as alloy_sol_types::SolType>::RustType,
-            ) -> Self {
-                tuple.into()
-            }
-            #[inline]
-            fn tokenize(&self) -> Self::Token<'_> {
-                (
-                    <alloy::sol_types::sol_data::Uint<
-                        256,
-                    > as alloy_sol_types::SolType>::tokenize(&self.contextId),
-                )
-            }
-            #[inline]
-            fn abi_decode_returns(
-                data: &[u8],
-                validate: bool,
-            ) -> alloy_sol_types::Result<Self::Return> {
-                <Self::ReturnTuple<
-                    '_,
-                > as alloy_sol_types::SolType>::abi_decode_sequence(data, validate)
-                    .map(Into::into)
-            }
-        }
-    };
-    #[derive(serde::Serialize, serde::Deserialize)]
-    #[derive(Default, Debug, PartialEq, Eq, Hash)]
-    /**Function with signature `getCoprocessorContextDeactivatedBlockTimestamp(uint256)` and selector `0x6ff0fd8d`.
-```solidity
-function getCoprocessorContextDeactivatedBlockTimestamp(uint256 contextId) external view returns (uint256);
-```*/
-    #[allow(non_camel_case_types, non_snake_case, clippy::pub_underscore_fields)]
-    #[derive(Clone)]
-    pub struct getCoprocessorContextDeactivatedBlockTimestampCall {
-        #[allow(missing_docs)]
-        pub contextId: alloy::sol_types::private::primitives::aliases::U256,
-    }
-    #[derive(serde::Serialize, serde::Deserialize)]
-    #[derive(Default, Debug, PartialEq, Eq, Hash)]
-    ///Container type for the return parameters of the [`getCoprocessorContextDeactivatedBlockTimestamp(uint256)`](getCoprocessorContextDeactivatedBlockTimestampCall) function.
-    #[allow(non_camel_case_types, non_snake_case, clippy::pub_underscore_fields)]
-    #[derive(Clone)]
-    pub struct getCoprocessorContextDeactivatedBlockTimestampReturn {
+    pub struct getCoprocessorActivationBlockTimestampFromContextReturn {
         #[allow(missing_docs)]
         pub _0: alloy::sol_types::private::primitives::aliases::U256,
     }
@@ -4881,10 +4571,10 @@ function getCoprocessorContextDeactivatedBlockTimestamp(uint256 contextId) exter
             #[automatically_derived]
             #[doc(hidden)]
             impl ::core::convert::From<
-                getCoprocessorContextDeactivatedBlockTimestampCall,
+                getCoprocessorActivationBlockTimestampFromContextCall,
             > for UnderlyingRustTuple<'_> {
                 fn from(
-                    value: getCoprocessorContextDeactivatedBlockTimestampCall,
+                    value: getCoprocessorActivationBlockTimestampFromContextCall,
                 ) -> Self {
                     (value.contextId,)
                 }
@@ -4892,7 +4582,7 @@ function getCoprocessorContextDeactivatedBlockTimestamp(uint256 contextId) exter
             #[automatically_derived]
             #[doc(hidden)]
             impl ::core::convert::From<UnderlyingRustTuple<'_>>
-            for getCoprocessorContextDeactivatedBlockTimestampCall {
+            for getCoprocessorActivationBlockTimestampFromContextCall {
                 fn from(tuple: UnderlyingRustTuple<'_>) -> Self {
                     Self { contextId: tuple.0 }
                 }
@@ -4919,10 +4609,10 @@ function getCoprocessorContextDeactivatedBlockTimestamp(uint256 contextId) exter
             #[automatically_derived]
             #[doc(hidden)]
             impl ::core::convert::From<
-                getCoprocessorContextDeactivatedBlockTimestampReturn,
+                getCoprocessorActivationBlockTimestampFromContextReturn,
             > for UnderlyingRustTuple<'_> {
                 fn from(
-                    value: getCoprocessorContextDeactivatedBlockTimestampReturn,
+                    value: getCoprocessorActivationBlockTimestampFromContextReturn,
                 ) -> Self {
                     (value._0,)
                 }
@@ -4930,7 +4620,7 @@ function getCoprocessorContextDeactivatedBlockTimestamp(uint256 contextId) exter
             #[automatically_derived]
             #[doc(hidden)]
             impl ::core::convert::From<UnderlyingRustTuple<'_>>
-            for getCoprocessorContextDeactivatedBlockTimestampReturn {
+            for getCoprocessorActivationBlockTimestampFromContextReturn {
                 fn from(tuple: UnderlyingRustTuple<'_>) -> Self {
                     Self { _0: tuple.0 }
                 }
@@ -4938,18 +4628,18 @@ function getCoprocessorContextDeactivatedBlockTimestamp(uint256 contextId) exter
         }
         #[automatically_derived]
         impl alloy_sol_types::SolCall
-        for getCoprocessorContextDeactivatedBlockTimestampCall {
+        for getCoprocessorActivationBlockTimestampFromContextCall {
             type Parameters<'a> = (alloy::sol_types::sol_data::Uint<256>,);
             type Token<'a> = <Self::Parameters<
                 'a,
             > as alloy_sol_types::SolType>::Token<'a>;
-            type Return = getCoprocessorContextDeactivatedBlockTimestampReturn;
+            type Return = getCoprocessorActivationBlockTimestampFromContextReturn;
             type ReturnTuple<'a> = (alloy::sol_types::sol_data::Uint<256>,);
             type ReturnToken<'a> = <Self::ReturnTuple<
                 'a,
             > as alloy_sol_types::SolType>::Token<'a>;
-            const SIGNATURE: &'static str = "getCoprocessorContextDeactivatedBlockTimestamp(uint256)";
-            const SELECTOR: [u8; 4] = [111u8, 240u8, 253u8, 141u8];
+            const SIGNATURE: &'static str = "getCoprocessorActivationBlockTimestampFromContext(uint256)";
+            const SELECTOR: [u8; 4] = [169u8, 74u8, 2u8, 173u8];
             #[inline]
             fn new<'a>(
                 tuple: <Self::Parameters<'a> as alloy_sol_types::SolType>::RustType,
@@ -5088,6 +4778,151 @@ function getCoprocessorContextStatus(uint256 contextId) external view returns (C
             > as alloy_sol_types::SolType>::Token<'a>;
             const SIGNATURE: &'static str = "getCoprocessorContextStatus(uint256)";
             const SELECTOR: [u8; 4] = [136u8, 139u8, 153u8, 224u8];
+            #[inline]
+            fn new<'a>(
+                tuple: <Self::Parameters<'a> as alloy_sol_types::SolType>::RustType,
+            ) -> Self {
+                tuple.into()
+            }
+            #[inline]
+            fn tokenize(&self) -> Self::Token<'_> {
+                (
+                    <alloy::sol_types::sol_data::Uint<
+                        256,
+                    > as alloy_sol_types::SolType>::tokenize(&self.contextId),
+                )
+            }
+            #[inline]
+            fn abi_decode_returns(
+                data: &[u8],
+                validate: bool,
+            ) -> alloy_sol_types::Result<Self::Return> {
+                <Self::ReturnTuple<
+                    '_,
+                > as alloy_sol_types::SolType>::abi_decode_sequence(data, validate)
+                    .map(Into::into)
+            }
+        }
+    };
+    #[derive(serde::Serialize, serde::Deserialize)]
+    #[derive(Default, Debug, PartialEq, Eq, Hash)]
+    /**Function with signature `getCoprocessorDeactivatedBlockTimestampFromContext(uint256)` and selector `0x90218748`.
+```solidity
+function getCoprocessorDeactivatedBlockTimestampFromContext(uint256 contextId) external view returns (uint256);
+```*/
+    #[allow(non_camel_case_types, non_snake_case, clippy::pub_underscore_fields)]
+    #[derive(Clone)]
+    pub struct getCoprocessorDeactivatedBlockTimestampFromContextCall {
+        #[allow(missing_docs)]
+        pub contextId: alloy::sol_types::private::primitives::aliases::U256,
+    }
+    #[derive(serde::Serialize, serde::Deserialize)]
+    #[derive(Default, Debug, PartialEq, Eq, Hash)]
+    ///Container type for the return parameters of the [`getCoprocessorDeactivatedBlockTimestampFromContext(uint256)`](getCoprocessorDeactivatedBlockTimestampFromContextCall) function.
+    #[allow(non_camel_case_types, non_snake_case, clippy::pub_underscore_fields)]
+    #[derive(Clone)]
+    pub struct getCoprocessorDeactivatedBlockTimestampFromContextReturn {
+        #[allow(missing_docs)]
+        pub _0: alloy::sol_types::private::primitives::aliases::U256,
+    }
+    #[allow(
+        non_camel_case_types,
+        non_snake_case,
+        clippy::pub_underscore_fields,
+        clippy::style
+    )]
+    const _: () = {
+        use alloy::sol_types as alloy_sol_types;
+        {
+            #[doc(hidden)]
+            type UnderlyingSolTuple<'a> = (alloy::sol_types::sol_data::Uint<256>,);
+            #[doc(hidden)]
+            type UnderlyingRustTuple<'a> = (
+                alloy::sol_types::private::primitives::aliases::U256,
+            );
+            #[cfg(test)]
+            #[allow(dead_code, unreachable_patterns)]
+            fn _type_assertion(
+                _t: alloy_sol_types::private::AssertTypeEq<UnderlyingRustTuple>,
+            ) {
+                match _t {
+                    alloy_sol_types::private::AssertTypeEq::<
+                        <UnderlyingSolTuple as alloy_sol_types::SolType>::RustType,
+                    >(_) => {}
+                }
+            }
+            #[automatically_derived]
+            #[doc(hidden)]
+            impl ::core::convert::From<
+                getCoprocessorDeactivatedBlockTimestampFromContextCall,
+            > for UnderlyingRustTuple<'_> {
+                fn from(
+                    value: getCoprocessorDeactivatedBlockTimestampFromContextCall,
+                ) -> Self {
+                    (value.contextId,)
+                }
+            }
+            #[automatically_derived]
+            #[doc(hidden)]
+            impl ::core::convert::From<UnderlyingRustTuple<'_>>
+            for getCoprocessorDeactivatedBlockTimestampFromContextCall {
+                fn from(tuple: UnderlyingRustTuple<'_>) -> Self {
+                    Self { contextId: tuple.0 }
+                }
+            }
+        }
+        {
+            #[doc(hidden)]
+            type UnderlyingSolTuple<'a> = (alloy::sol_types::sol_data::Uint<256>,);
+            #[doc(hidden)]
+            type UnderlyingRustTuple<'a> = (
+                alloy::sol_types::private::primitives::aliases::U256,
+            );
+            #[cfg(test)]
+            #[allow(dead_code, unreachable_patterns)]
+            fn _type_assertion(
+                _t: alloy_sol_types::private::AssertTypeEq<UnderlyingRustTuple>,
+            ) {
+                match _t {
+                    alloy_sol_types::private::AssertTypeEq::<
+                        <UnderlyingSolTuple as alloy_sol_types::SolType>::RustType,
+                    >(_) => {}
+                }
+            }
+            #[automatically_derived]
+            #[doc(hidden)]
+            impl ::core::convert::From<
+                getCoprocessorDeactivatedBlockTimestampFromContextReturn,
+            > for UnderlyingRustTuple<'_> {
+                fn from(
+                    value: getCoprocessorDeactivatedBlockTimestampFromContextReturn,
+                ) -> Self {
+                    (value._0,)
+                }
+            }
+            #[automatically_derived]
+            #[doc(hidden)]
+            impl ::core::convert::From<UnderlyingRustTuple<'_>>
+            for getCoprocessorDeactivatedBlockTimestampFromContextReturn {
+                fn from(tuple: UnderlyingRustTuple<'_>) -> Self {
+                    Self { _0: tuple.0 }
+                }
+            }
+        }
+        #[automatically_derived]
+        impl alloy_sol_types::SolCall
+        for getCoprocessorDeactivatedBlockTimestampFromContextCall {
+            type Parameters<'a> = (alloy::sol_types::sol_data::Uint<256>,);
+            type Token<'a> = <Self::Parameters<
+                'a,
+            > as alloy_sol_types::SolType>::Token<'a>;
+            type Return = getCoprocessorDeactivatedBlockTimestampFromContextReturn;
+            type ReturnTuple<'a> = (alloy::sol_types::sol_data::Uint<256>,);
+            type ReturnToken<'a> = <Self::ReturnTuple<
+                'a,
+            > as alloy_sol_types::SolType>::Token<'a>;
+            const SIGNATURE: &'static str = "getCoprocessorDeactivatedBlockTimestampFromContext(uint256)";
+            const SELECTOR: [u8; 4] = [144u8, 33u8, 135u8, 72u8];
             #[inline]
             fn new<'a>(
                 tuple: <Self::Parameters<'a> as alloy_sol_types::SolType>::RustType,
@@ -5410,19 +5245,22 @@ function getCoprocessorMajorityThresholdFromContext(uint256 contextId) external 
     };
     #[derive(serde::Serialize, serde::Deserialize)]
     #[derive(Default, Debug, PartialEq, Eq, Hash)]
-    /**Function with signature `getCoprocessorSigners()` and selector `0x9164d0ae`.
+    /**Function with signature `getCoprocessorSignersFromContext(uint256)` and selector `0x6b3174e5`.
 ```solidity
-function getCoprocessorSigners() external view returns (address[] memory);
+function getCoprocessorSignersFromContext(uint256 contextId) external view returns (address[] memory);
 ```*/
     #[allow(non_camel_case_types, non_snake_case, clippy::pub_underscore_fields)]
     #[derive(Clone)]
-    pub struct getCoprocessorSignersCall {}
+    pub struct getCoprocessorSignersFromContextCall {
+        #[allow(missing_docs)]
+        pub contextId: alloy::sol_types::private::primitives::aliases::U256,
+    }
     #[derive(serde::Serialize, serde::Deserialize)]
     #[derive(Default, Debug, PartialEq, Eq, Hash)]
-    ///Container type for the return parameters of the [`getCoprocessorSigners()`](getCoprocessorSignersCall) function.
+    ///Container type for the return parameters of the [`getCoprocessorSignersFromContext(uint256)`](getCoprocessorSignersFromContextCall) function.
     #[allow(non_camel_case_types, non_snake_case, clippy::pub_underscore_fields)]
     #[derive(Clone)]
-    pub struct getCoprocessorSignersReturn {
+    pub struct getCoprocessorSignersFromContextReturn {
         #[allow(missing_docs)]
         pub _0: alloy::sol_types::private::Vec<alloy::sol_types::private::Address>,
     }
@@ -5436,9 +5274,11 @@ function getCoprocessorSigners() external view returns (address[] memory);
         use alloy::sol_types as alloy_sol_types;
         {
             #[doc(hidden)]
-            type UnderlyingSolTuple<'a> = ();
+            type UnderlyingSolTuple<'a> = (alloy::sol_types::sol_data::Uint<256>,);
             #[doc(hidden)]
-            type UnderlyingRustTuple<'a> = ();
+            type UnderlyingRustTuple<'a> = (
+                alloy::sol_types::private::primitives::aliases::U256,
+            );
             #[cfg(test)]
             #[allow(dead_code, unreachable_patterns)]
             fn _type_assertion(
@@ -5452,18 +5292,18 @@ function getCoprocessorSigners() external view returns (address[] memory);
             }
             #[automatically_derived]
             #[doc(hidden)]
-            impl ::core::convert::From<getCoprocessorSignersCall>
+            impl ::core::convert::From<getCoprocessorSignersFromContextCall>
             for UnderlyingRustTuple<'_> {
-                fn from(value: getCoprocessorSignersCall) -> Self {
-                    ()
+                fn from(value: getCoprocessorSignersFromContextCall) -> Self {
+                    (value.contextId,)
                 }
             }
             #[automatically_derived]
             #[doc(hidden)]
             impl ::core::convert::From<UnderlyingRustTuple<'_>>
-            for getCoprocessorSignersCall {
+            for getCoprocessorSignersFromContextCall {
                 fn from(tuple: UnderlyingRustTuple<'_>) -> Self {
-                    Self {}
+                    Self { contextId: tuple.0 }
                 }
             }
         }
@@ -5489,36 +5329,36 @@ function getCoprocessorSigners() external view returns (address[] memory);
             }
             #[automatically_derived]
             #[doc(hidden)]
-            impl ::core::convert::From<getCoprocessorSignersReturn>
+            impl ::core::convert::From<getCoprocessorSignersFromContextReturn>
             for UnderlyingRustTuple<'_> {
-                fn from(value: getCoprocessorSignersReturn) -> Self {
+                fn from(value: getCoprocessorSignersFromContextReturn) -> Self {
                     (value._0,)
                 }
             }
             #[automatically_derived]
             #[doc(hidden)]
             impl ::core::convert::From<UnderlyingRustTuple<'_>>
-            for getCoprocessorSignersReturn {
+            for getCoprocessorSignersFromContextReturn {
                 fn from(tuple: UnderlyingRustTuple<'_>) -> Self {
                     Self { _0: tuple.0 }
                 }
             }
         }
         #[automatically_derived]
-        impl alloy_sol_types::SolCall for getCoprocessorSignersCall {
-            type Parameters<'a> = ();
+        impl alloy_sol_types::SolCall for getCoprocessorSignersFromContextCall {
+            type Parameters<'a> = (alloy::sol_types::sol_data::Uint<256>,);
             type Token<'a> = <Self::Parameters<
                 'a,
             > as alloy_sol_types::SolType>::Token<'a>;
-            type Return = getCoprocessorSignersReturn;
+            type Return = getCoprocessorSignersFromContextReturn;
             type ReturnTuple<'a> = (
                 alloy::sol_types::sol_data::Array<alloy::sol_types::sol_data::Address>,
             );
             type ReturnToken<'a> = <Self::ReturnTuple<
                 'a,
             > as alloy_sol_types::SolType>::Token<'a>;
-            const SIGNATURE: &'static str = "getCoprocessorSigners()";
-            const SELECTOR: [u8; 4] = [145u8, 100u8, 208u8, 174u8];
+            const SIGNATURE: &'static str = "getCoprocessorSignersFromContext(uint256)";
+            const SELECTOR: [u8; 4] = [107u8, 49u8, 116u8, 229u8];
             #[inline]
             fn new<'a>(
                 tuple: <Self::Parameters<'a> as alloy_sol_types::SolType>::RustType,
@@ -5527,7 +5367,11 @@ function getCoprocessorSigners() external view returns (address[] memory);
             }
             #[inline]
             fn tokenize(&self) -> Self::Token<'_> {
-                ()
+                (
+                    <alloy::sol_types::sol_data::Uint<
+                        256,
+                    > as alloy_sol_types::SolType>::tokenize(&self.contextId),
+                )
             }
             #[inline]
             fn abi_decode_returns(
@@ -5543,19 +5387,22 @@ function getCoprocessorSigners() external view returns (address[] memory);
     };
     #[derive(serde::Serialize, serde::Deserialize)]
     #[derive(Default, Debug, PartialEq, Eq, Hash)]
-    /**Function with signature `getCoprocessorTxSenders()` and selector `0x1ea5bd42`.
+    /**Function with signature `getCoprocessorTxSendersFromContext(uint256)` and selector `0x18b7214d`.
 ```solidity
-function getCoprocessorTxSenders() external view returns (address[] memory);
+function getCoprocessorTxSendersFromContext(uint256 contextId) external view returns (address[] memory);
 ```*/
     #[allow(non_camel_case_types, non_snake_case, clippy::pub_underscore_fields)]
     #[derive(Clone)]
-    pub struct getCoprocessorTxSendersCall {}
+    pub struct getCoprocessorTxSendersFromContextCall {
+        #[allow(missing_docs)]
+        pub contextId: alloy::sol_types::private::primitives::aliases::U256,
+    }
     #[derive(serde::Serialize, serde::Deserialize)]
     #[derive(Default, Debug, PartialEq, Eq, Hash)]
-    ///Container type for the return parameters of the [`getCoprocessorTxSenders()`](getCoprocessorTxSendersCall) function.
+    ///Container type for the return parameters of the [`getCoprocessorTxSendersFromContext(uint256)`](getCoprocessorTxSendersFromContextCall) function.
     #[allow(non_camel_case_types, non_snake_case, clippy::pub_underscore_fields)]
     #[derive(Clone)]
-    pub struct getCoprocessorTxSendersReturn {
+    pub struct getCoprocessorTxSendersFromContextReturn {
         #[allow(missing_docs)]
         pub _0: alloy::sol_types::private::Vec<alloy::sol_types::private::Address>,
     }
@@ -5569,9 +5416,11 @@ function getCoprocessorTxSenders() external view returns (address[] memory);
         use alloy::sol_types as alloy_sol_types;
         {
             #[doc(hidden)]
-            type UnderlyingSolTuple<'a> = ();
+            type UnderlyingSolTuple<'a> = (alloy::sol_types::sol_data::Uint<256>,);
             #[doc(hidden)]
-            type UnderlyingRustTuple<'a> = ();
+            type UnderlyingRustTuple<'a> = (
+                alloy::sol_types::private::primitives::aliases::U256,
+            );
             #[cfg(test)]
             #[allow(dead_code, unreachable_patterns)]
             fn _type_assertion(
@@ -5585,18 +5434,18 @@ function getCoprocessorTxSenders() external view returns (address[] memory);
             }
             #[automatically_derived]
             #[doc(hidden)]
-            impl ::core::convert::From<getCoprocessorTxSendersCall>
+            impl ::core::convert::From<getCoprocessorTxSendersFromContextCall>
             for UnderlyingRustTuple<'_> {
-                fn from(value: getCoprocessorTxSendersCall) -> Self {
-                    ()
+                fn from(value: getCoprocessorTxSendersFromContextCall) -> Self {
+                    (value.contextId,)
                 }
             }
             #[automatically_derived]
             #[doc(hidden)]
             impl ::core::convert::From<UnderlyingRustTuple<'_>>
-            for getCoprocessorTxSendersCall {
+            for getCoprocessorTxSendersFromContextCall {
                 fn from(tuple: UnderlyingRustTuple<'_>) -> Self {
-                    Self {}
+                    Self { contextId: tuple.0 }
                 }
             }
         }
@@ -5622,36 +5471,36 @@ function getCoprocessorTxSenders() external view returns (address[] memory);
             }
             #[automatically_derived]
             #[doc(hidden)]
-            impl ::core::convert::From<getCoprocessorTxSendersReturn>
+            impl ::core::convert::From<getCoprocessorTxSendersFromContextReturn>
             for UnderlyingRustTuple<'_> {
-                fn from(value: getCoprocessorTxSendersReturn) -> Self {
+                fn from(value: getCoprocessorTxSendersFromContextReturn) -> Self {
                     (value._0,)
                 }
             }
             #[automatically_derived]
             #[doc(hidden)]
             impl ::core::convert::From<UnderlyingRustTuple<'_>>
-            for getCoprocessorTxSendersReturn {
+            for getCoprocessorTxSendersFromContextReturn {
                 fn from(tuple: UnderlyingRustTuple<'_>) -> Self {
                     Self { _0: tuple.0 }
                 }
             }
         }
         #[automatically_derived]
-        impl alloy_sol_types::SolCall for getCoprocessorTxSendersCall {
-            type Parameters<'a> = ();
+        impl alloy_sol_types::SolCall for getCoprocessorTxSendersFromContextCall {
+            type Parameters<'a> = (alloy::sol_types::sol_data::Uint<256>,);
             type Token<'a> = <Self::Parameters<
                 'a,
             > as alloy_sol_types::SolType>::Token<'a>;
-            type Return = getCoprocessorTxSendersReturn;
+            type Return = getCoprocessorTxSendersFromContextReturn;
             type ReturnTuple<'a> = (
                 alloy::sol_types::sol_data::Array<alloy::sol_types::sol_data::Address>,
             );
             type ReturnToken<'a> = <Self::ReturnTuple<
                 'a,
             > as alloy_sol_types::SolType>::Token<'a>;
-            const SIGNATURE: &'static str = "getCoprocessorTxSenders()";
-            const SELECTOR: [u8; 4] = [30u8, 165u8, 189u8, 66u8];
+            const SIGNATURE: &'static str = "getCoprocessorTxSendersFromContext(uint256)";
+            const SELECTOR: [u8; 4] = [24u8, 183u8, 33u8, 77u8];
             #[inline]
             fn new<'a>(
                 tuple: <Self::Parameters<'a> as alloy_sol_types::SolType>::RustType,
@@ -5660,7 +5509,11 @@ function getCoprocessorTxSenders() external view returns (address[] memory);
             }
             #[inline]
             fn tokenize(&self) -> Self::Token<'_> {
-                ()
+                (
+                    <alloy::sol_types::sol_data::Uint<
+                        256,
+                    > as alloy_sol_types::SolType>::tokenize(&self.contextId),
+                )
             }
             #[inline]
             fn abi_decode_returns(
@@ -6454,17 +6307,15 @@ function refreshCoprocessorContextStatuses() external;
         #[allow(missing_docs)]
         getActiveCoprocessorContextId(getActiveCoprocessorContextIdCall),
         #[allow(missing_docs)]
-        getCoprocessor(getCoprocessorCall),
-        #[allow(missing_docs)]
-        getCoprocessorContextActivationBlockTimestamp(
-            getCoprocessorContextActivationBlockTimestampCall,
-        ),
-        #[allow(missing_docs)]
-        getCoprocessorContextDeactivatedBlockTimestamp(
-            getCoprocessorContextDeactivatedBlockTimestampCall,
+        getCoprocessorActivationBlockTimestampFromContext(
+            getCoprocessorActivationBlockTimestampFromContextCall,
         ),
         #[allow(missing_docs)]
         getCoprocessorContextStatus(getCoprocessorContextStatusCall),
+        #[allow(missing_docs)]
+        getCoprocessorDeactivatedBlockTimestampFromContext(
+            getCoprocessorDeactivatedBlockTimestampFromContextCall,
+        ),
         #[allow(missing_docs)]
         getCoprocessorFromContext(getCoprocessorFromContextCall),
         #[allow(missing_docs)]
@@ -6472,9 +6323,9 @@ function refreshCoprocessorContextStatuses() external;
             getCoprocessorMajorityThresholdFromContextCall,
         ),
         #[allow(missing_docs)]
-        getCoprocessorSigners(getCoprocessorSignersCall),
+        getCoprocessorSignersFromContext(getCoprocessorSignersFromContextCall),
         #[allow(missing_docs)]
-        getCoprocessorTxSenders(getCoprocessorTxSendersCall),
+        getCoprocessorTxSendersFromContext(getCoprocessorTxSendersFromContextCall),
         #[allow(missing_docs)]
         getPreActivationCoprocessorContextId(getPreActivationCoprocessorContextIdCall),
         #[allow(missing_docs)]
@@ -6501,23 +6352,22 @@ function refreshCoprocessorContextStatuses() external;
         pub const SELECTORS: &'static [[u8; 4usize]] = &[
             [8u8, 110u8, 78u8, 28u8],
             [13u8, 142u8, 110u8, 44u8],
-            [14u8, 120u8, 245u8, 241u8],
-            [30u8, 165u8, 189u8, 66u8],
+            [24u8, 183u8, 33u8, 77u8],
             [58u8, 81u8, 98u8, 230u8],
             [96u8, 178u8, 84u8, 101u8],
+            [107u8, 49u8, 116u8, 229u8],
             [107u8, 168u8, 24u8, 225u8],
-            [111u8, 240u8, 253u8, 141u8],
             [132u8, 202u8, 225u8, 135u8],
             [136u8, 139u8, 153u8, 224u8],
-            [145u8, 100u8, 208u8, 174u8],
+            [144u8, 33u8, 135u8, 72u8],
             [149u8, 123u8, 42u8, 190u8],
             [153u8, 29u8, 195u8, 109u8],
             [158u8, 251u8, 72u8, 78u8],
+            [169u8, 74u8, 2u8, 173u8],
             [190u8, 145u8, 24u8, 123u8],
             [209u8, 132u8, 29u8, 211u8],
             [215u8, 64u8, 228u8, 2u8],
             [238u8, 193u8, 104u8, 251u8],
-            [239u8, 105u8, 151u8, 249u8],
             [241u8, 146u8, 207u8, 104u8],
             [254u8, 217u8, 113u8, 107u8],
         ];
@@ -6526,7 +6376,7 @@ function refreshCoprocessorContextStatuses() external;
     impl alloy_sol_types::SolInterface for ICoprocessorContextsCalls {
         const NAME: &'static str = "ICoprocessorContextsCalls";
         const MIN_DATA_LENGTH: usize = 0usize;
-        const COUNT: usize = 21usize;
+        const COUNT: usize = 20usize;
         #[inline]
         fn selector(&self) -> [u8; 4] {
             match self {
@@ -6551,17 +6401,14 @@ function refreshCoprocessorContextStatuses() external;
                 Self::getActiveCoprocessorContextId(_) => {
                     <getActiveCoprocessorContextIdCall as alloy_sol_types::SolCall>::SELECTOR
                 }
-                Self::getCoprocessor(_) => {
-                    <getCoprocessorCall as alloy_sol_types::SolCall>::SELECTOR
-                }
-                Self::getCoprocessorContextActivationBlockTimestamp(_) => {
-                    <getCoprocessorContextActivationBlockTimestampCall as alloy_sol_types::SolCall>::SELECTOR
-                }
-                Self::getCoprocessorContextDeactivatedBlockTimestamp(_) => {
-                    <getCoprocessorContextDeactivatedBlockTimestampCall as alloy_sol_types::SolCall>::SELECTOR
+                Self::getCoprocessorActivationBlockTimestampFromContext(_) => {
+                    <getCoprocessorActivationBlockTimestampFromContextCall as alloy_sol_types::SolCall>::SELECTOR
                 }
                 Self::getCoprocessorContextStatus(_) => {
                     <getCoprocessorContextStatusCall as alloy_sol_types::SolCall>::SELECTOR
+                }
+                Self::getCoprocessorDeactivatedBlockTimestampFromContext(_) => {
+                    <getCoprocessorDeactivatedBlockTimestampFromContextCall as alloy_sol_types::SolCall>::SELECTOR
                 }
                 Self::getCoprocessorFromContext(_) => {
                     <getCoprocessorFromContextCall as alloy_sol_types::SolCall>::SELECTOR
@@ -6569,11 +6416,11 @@ function refreshCoprocessorContextStatuses() external;
                 Self::getCoprocessorMajorityThresholdFromContext(_) => {
                     <getCoprocessorMajorityThresholdFromContextCall as alloy_sol_types::SolCall>::SELECTOR
                 }
-                Self::getCoprocessorSigners(_) => {
-                    <getCoprocessorSignersCall as alloy_sol_types::SolCall>::SELECTOR
+                Self::getCoprocessorSignersFromContext(_) => {
+                    <getCoprocessorSignersFromContextCall as alloy_sol_types::SolCall>::SELECTOR
                 }
-                Self::getCoprocessorTxSenders(_) => {
-                    <getCoprocessorTxSendersCall as alloy_sol_types::SolCall>::SELECTOR
+                Self::getCoprocessorTxSendersFromContext(_) => {
+                    <getCoprocessorTxSendersFromContextCall as alloy_sol_types::SolCall>::SELECTOR
                 }
                 Self::getPreActivationCoprocessorContextId(_) => {
                     <getPreActivationCoprocessorContextIdCall as alloy_sol_types::SolCall>::SELECTOR
@@ -6643,32 +6490,19 @@ function refreshCoprocessorContextStatuses() external;
                     getVersion
                 },
                 {
-                    fn getCoprocessorContextActivationBlockTimestamp(
+                    fn getCoprocessorTxSendersFromContext(
                         data: &[u8],
                         validate: bool,
                     ) -> alloy_sol_types::Result<ICoprocessorContextsCalls> {
-                        <getCoprocessorContextActivationBlockTimestampCall as alloy_sol_types::SolCall>::abi_decode_raw(
+                        <getCoprocessorTxSendersFromContextCall as alloy_sol_types::SolCall>::abi_decode_raw(
                                 data,
                                 validate,
                             )
                             .map(
-                                ICoprocessorContextsCalls::getCoprocessorContextActivationBlockTimestamp,
+                                ICoprocessorContextsCalls::getCoprocessorTxSendersFromContext,
                             )
                     }
-                    getCoprocessorContextActivationBlockTimestamp
-                },
-                {
-                    fn getCoprocessorTxSenders(
-                        data: &[u8],
-                        validate: bool,
-                    ) -> alloy_sol_types::Result<ICoprocessorContextsCalls> {
-                        <getCoprocessorTxSendersCall as alloy_sol_types::SolCall>::abi_decode_raw(
-                                data,
-                                validate,
-                            )
-                            .map(ICoprocessorContextsCalls::getCoprocessorTxSenders)
-                    }
-                    getCoprocessorTxSenders
+                    getCoprocessorTxSendersFromContext
                 },
                 {
                     fn refreshCoprocessorContextStatuses(
@@ -6701,6 +6535,21 @@ function refreshCoprocessorContextStatuses() external;
                     isCoprocessorContextActiveOrSuspended
                 },
                 {
+                    fn getCoprocessorSignersFromContext(
+                        data: &[u8],
+                        validate: bool,
+                    ) -> alloy_sol_types::Result<ICoprocessorContextsCalls> {
+                        <getCoprocessorSignersFromContextCall as alloy_sol_types::SolCall>::abi_decode_raw(
+                                data,
+                                validate,
+                            )
+                            .map(
+                                ICoprocessorContextsCalls::getCoprocessorSignersFromContext,
+                            )
+                    }
+                    getCoprocessorSignersFromContext
+                },
+                {
                     fn getCoprocessorMajorityThresholdFromContext(
                         data: &[u8],
                         validate: bool,
@@ -6714,21 +6563,6 @@ function refreshCoprocessorContextStatuses() external;
                             )
                     }
                     getCoprocessorMajorityThresholdFromContext
-                },
-                {
-                    fn getCoprocessorContextDeactivatedBlockTimestamp(
-                        data: &[u8],
-                        validate: bool,
-                    ) -> alloy_sol_types::Result<ICoprocessorContextsCalls> {
-                        <getCoprocessorContextDeactivatedBlockTimestampCall as alloy_sol_types::SolCall>::abi_decode_raw(
-                                data,
-                                validate,
-                            )
-                            .map(
-                                ICoprocessorContextsCalls::getCoprocessorContextDeactivatedBlockTimestamp,
-                            )
-                    }
-                    getCoprocessorContextDeactivatedBlockTimestamp
                 },
                 {
                     fn addCoprocessorContext(
@@ -6757,17 +6591,19 @@ function refreshCoprocessorContextStatuses() external;
                     getCoprocessorContextStatus
                 },
                 {
-                    fn getCoprocessorSigners(
+                    fn getCoprocessorDeactivatedBlockTimestampFromContext(
                         data: &[u8],
                         validate: bool,
                     ) -> alloy_sol_types::Result<ICoprocessorContextsCalls> {
-                        <getCoprocessorSignersCall as alloy_sol_types::SolCall>::abi_decode_raw(
+                        <getCoprocessorDeactivatedBlockTimestampFromContextCall as alloy_sol_types::SolCall>::abi_decode_raw(
                                 data,
                                 validate,
                             )
-                            .map(ICoprocessorContextsCalls::getCoprocessorSigners)
+                            .map(
+                                ICoprocessorContextsCalls::getCoprocessorDeactivatedBlockTimestampFromContext,
+                            )
                     }
-                    getCoprocessorSigners
+                    getCoprocessorDeactivatedBlockTimestampFromContext
                 },
                 {
                     fn moveSuspendedCoprocessorContextToActive(
@@ -6813,6 +6649,21 @@ function refreshCoprocessorContextStatuses() external;
                             )
                     }
                     checkIsCoprocessorSignerFromContext
+                },
+                {
+                    fn getCoprocessorActivationBlockTimestampFromContext(
+                        data: &[u8],
+                        validate: bool,
+                    ) -> alloy_sol_types::Result<ICoprocessorContextsCalls> {
+                        <getCoprocessorActivationBlockTimestampFromContextCall as alloy_sol_types::SolCall>::abi_decode_raw(
+                                data,
+                                validate,
+                            )
+                            .map(
+                                ICoprocessorContextsCalls::getCoprocessorActivationBlockTimestampFromContext,
+                            )
+                    }
+                    getCoprocessorActivationBlockTimestampFromContext
                 },
                 {
                     fn getPreActivationCoprocessorContextId(
@@ -6867,19 +6718,6 @@ function refreshCoprocessorContextStatuses() external;
                             .map(ICoprocessorContextsCalls::compromiseCoprocessorContext)
                     }
                     compromiseCoprocessorContext
-                },
-                {
-                    fn getCoprocessor(
-                        data: &[u8],
-                        validate: bool,
-                    ) -> alloy_sol_types::Result<ICoprocessorContextsCalls> {
-                        <getCoprocessorCall as alloy_sol_types::SolCall>::abi_decode_raw(
-                                data,
-                                validate,
-                            )
-                            .map(ICoprocessorContextsCalls::getCoprocessor)
-                    }
-                    getCoprocessor
                 },
                 {
                     fn checkIsCoprocessorTxSenderFromContext(
@@ -6958,23 +6796,18 @@ function refreshCoprocessorContextStatuses() external;
                         inner,
                     )
                 }
-                Self::getCoprocessor(inner) => {
-                    <getCoprocessorCall as alloy_sol_types::SolCall>::abi_encoded_size(
-                        inner,
-                    )
-                }
-                Self::getCoprocessorContextActivationBlockTimestamp(inner) => {
-                    <getCoprocessorContextActivationBlockTimestampCall as alloy_sol_types::SolCall>::abi_encoded_size(
-                        inner,
-                    )
-                }
-                Self::getCoprocessorContextDeactivatedBlockTimestamp(inner) => {
-                    <getCoprocessorContextDeactivatedBlockTimestampCall as alloy_sol_types::SolCall>::abi_encoded_size(
+                Self::getCoprocessorActivationBlockTimestampFromContext(inner) => {
+                    <getCoprocessorActivationBlockTimestampFromContextCall as alloy_sol_types::SolCall>::abi_encoded_size(
                         inner,
                     )
                 }
                 Self::getCoprocessorContextStatus(inner) => {
                     <getCoprocessorContextStatusCall as alloy_sol_types::SolCall>::abi_encoded_size(
+                        inner,
+                    )
+                }
+                Self::getCoprocessorDeactivatedBlockTimestampFromContext(inner) => {
+                    <getCoprocessorDeactivatedBlockTimestampFromContextCall as alloy_sol_types::SolCall>::abi_encoded_size(
                         inner,
                     )
                 }
@@ -6988,13 +6821,13 @@ function refreshCoprocessorContextStatuses() external;
                         inner,
                     )
                 }
-                Self::getCoprocessorSigners(inner) => {
-                    <getCoprocessorSignersCall as alloy_sol_types::SolCall>::abi_encoded_size(
+                Self::getCoprocessorSignersFromContext(inner) => {
+                    <getCoprocessorSignersFromContextCall as alloy_sol_types::SolCall>::abi_encoded_size(
                         inner,
                     )
                 }
-                Self::getCoprocessorTxSenders(inner) => {
-                    <getCoprocessorTxSendersCall as alloy_sol_types::SolCall>::abi_encoded_size(
+                Self::getCoprocessorTxSendersFromContext(inner) => {
+                    <getCoprocessorTxSendersFromContextCall as alloy_sol_types::SolCall>::abi_encoded_size(
                         inner,
                     )
                 }
@@ -7073,26 +6906,20 @@ function refreshCoprocessorContextStatuses() external;
                         out,
                     )
                 }
-                Self::getCoprocessor(inner) => {
-                    <getCoprocessorCall as alloy_sol_types::SolCall>::abi_encode_raw(
-                        inner,
-                        out,
-                    )
-                }
-                Self::getCoprocessorContextActivationBlockTimestamp(inner) => {
-                    <getCoprocessorContextActivationBlockTimestampCall as alloy_sol_types::SolCall>::abi_encode_raw(
-                        inner,
-                        out,
-                    )
-                }
-                Self::getCoprocessorContextDeactivatedBlockTimestamp(inner) => {
-                    <getCoprocessorContextDeactivatedBlockTimestampCall as alloy_sol_types::SolCall>::abi_encode_raw(
+                Self::getCoprocessorActivationBlockTimestampFromContext(inner) => {
+                    <getCoprocessorActivationBlockTimestampFromContextCall as alloy_sol_types::SolCall>::abi_encode_raw(
                         inner,
                         out,
                     )
                 }
                 Self::getCoprocessorContextStatus(inner) => {
                     <getCoprocessorContextStatusCall as alloy_sol_types::SolCall>::abi_encode_raw(
+                        inner,
+                        out,
+                    )
+                }
+                Self::getCoprocessorDeactivatedBlockTimestampFromContext(inner) => {
+                    <getCoprocessorDeactivatedBlockTimestampFromContextCall as alloy_sol_types::SolCall>::abi_encode_raw(
                         inner,
                         out,
                     )
@@ -7109,14 +6936,14 @@ function refreshCoprocessorContextStatuses() external;
                         out,
                     )
                 }
-                Self::getCoprocessorSigners(inner) => {
-                    <getCoprocessorSignersCall as alloy_sol_types::SolCall>::abi_encode_raw(
+                Self::getCoprocessorSignersFromContext(inner) => {
+                    <getCoprocessorSignersFromContextCall as alloy_sol_types::SolCall>::abi_encode_raw(
                         inner,
                         out,
                     )
                 }
-                Self::getCoprocessorTxSenders(inner) => {
-                    <getCoprocessorTxSendersCall as alloy_sol_types::SolCall>::abi_encode_raw(
+                Self::getCoprocessorTxSendersFromContext(inner) => {
+                    <getCoprocessorTxSendersFromContextCall as alloy_sol_types::SolCall>::abi_encode_raw(
                         inner,
                         out,
                     )
@@ -8039,45 +7866,18 @@ the bytecode concatenated with the constructor's ABI-encoded arguments.*/
                 },
             )
         }
-        ///Creates a new call builder for the [`getCoprocessor`] function.
-        pub fn getCoprocessor(
-            &self,
-            coprocessorTxSenderAddress: alloy::sol_types::private::Address,
-        ) -> alloy_contract::SolCallBuilder<T, &P, getCoprocessorCall, N> {
-            self.call_builder(
-                &getCoprocessorCall {
-                    coprocessorTxSenderAddress,
-                },
-            )
-        }
-        ///Creates a new call builder for the [`getCoprocessorContextActivationBlockTimestamp`] function.
-        pub fn getCoprocessorContextActivationBlockTimestamp(
+        ///Creates a new call builder for the [`getCoprocessorActivationBlockTimestampFromContext`] function.
+        pub fn getCoprocessorActivationBlockTimestampFromContext(
             &self,
             contextId: alloy::sol_types::private::primitives::aliases::U256,
         ) -> alloy_contract::SolCallBuilder<
             T,
             &P,
-            getCoprocessorContextActivationBlockTimestampCall,
+            getCoprocessorActivationBlockTimestampFromContextCall,
             N,
         > {
             self.call_builder(
-                &getCoprocessorContextActivationBlockTimestampCall {
-                    contextId,
-                },
-            )
-        }
-        ///Creates a new call builder for the [`getCoprocessorContextDeactivatedBlockTimestamp`] function.
-        pub fn getCoprocessorContextDeactivatedBlockTimestamp(
-            &self,
-            contextId: alloy::sol_types::private::primitives::aliases::U256,
-        ) -> alloy_contract::SolCallBuilder<
-            T,
-            &P,
-            getCoprocessorContextDeactivatedBlockTimestampCall,
-            N,
-        > {
-            self.call_builder(
-                &getCoprocessorContextDeactivatedBlockTimestampCall {
+                &getCoprocessorActivationBlockTimestampFromContextCall {
                     contextId,
                 },
             )
@@ -8089,6 +7889,22 @@ the bytecode concatenated with the constructor's ABI-encoded arguments.*/
         ) -> alloy_contract::SolCallBuilder<T, &P, getCoprocessorContextStatusCall, N> {
             self.call_builder(
                 &getCoprocessorContextStatusCall {
+                    contextId,
+                },
+            )
+        }
+        ///Creates a new call builder for the [`getCoprocessorDeactivatedBlockTimestampFromContext`] function.
+        pub fn getCoprocessorDeactivatedBlockTimestampFromContext(
+            &self,
+            contextId: alloy::sol_types::private::primitives::aliases::U256,
+        ) -> alloy_contract::SolCallBuilder<
+            T,
+            &P,
+            getCoprocessorDeactivatedBlockTimestampFromContextCall,
+            N,
+        > {
+            self.call_builder(
+                &getCoprocessorDeactivatedBlockTimestampFromContextCall {
                     contextId,
                 },
             )
@@ -8122,17 +7938,37 @@ the bytecode concatenated with the constructor's ABI-encoded arguments.*/
                 },
             )
         }
-        ///Creates a new call builder for the [`getCoprocessorSigners`] function.
-        pub fn getCoprocessorSigners(
+        ///Creates a new call builder for the [`getCoprocessorSignersFromContext`] function.
+        pub fn getCoprocessorSignersFromContext(
             &self,
-        ) -> alloy_contract::SolCallBuilder<T, &P, getCoprocessorSignersCall, N> {
-            self.call_builder(&getCoprocessorSignersCall {})
+            contextId: alloy::sol_types::private::primitives::aliases::U256,
+        ) -> alloy_contract::SolCallBuilder<
+            T,
+            &P,
+            getCoprocessorSignersFromContextCall,
+            N,
+        > {
+            self.call_builder(
+                &getCoprocessorSignersFromContextCall {
+                    contextId,
+                },
+            )
         }
-        ///Creates a new call builder for the [`getCoprocessorTxSenders`] function.
-        pub fn getCoprocessorTxSenders(
+        ///Creates a new call builder for the [`getCoprocessorTxSendersFromContext`] function.
+        pub fn getCoprocessorTxSendersFromContext(
             &self,
-        ) -> alloy_contract::SolCallBuilder<T, &P, getCoprocessorTxSendersCall, N> {
-            self.call_builder(&getCoprocessorTxSendersCall {})
+            contextId: alloy::sol_types::private::primitives::aliases::U256,
+        ) -> alloy_contract::SolCallBuilder<
+            T,
+            &P,
+            getCoprocessorTxSendersFromContextCall,
+            N,
+        > {
+            self.call_builder(
+                &getCoprocessorTxSendersFromContextCall {
+                    contextId,
+                },
+            )
         }
         ///Creates a new call builder for the [`getPreActivationCoprocessorContextId`] function.
         pub fn getPreActivationCoprocessorContextId(
