@@ -17,10 +17,6 @@ kms_core_endpoint = "http://localhost:50051"
 # ENV: KMS_CONNECTOR_GATEWAY_URL
 gateway_url = "ws://localhost:8546"
 
-# HTTP endpoint for polling operations (local node)
-# ENV: KMS_CONNECTOR_GATEWAY_POLLING_HTTP
-gateway_polling_http = "http://localhost:8546"
-
 # Local testing chain ID
 # ENV: KMS_CONNECTOR_CHAIN_ID
 chain_id = 54321

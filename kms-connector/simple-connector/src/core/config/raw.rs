@@ -136,7 +136,7 @@ fn default_gateway_config_address() -> String {
 }
 
 fn default_message_send_delta_ms() -> u64 {
-    2000 // 2 seconds (2-3 block buffer for high-frequency chains)
+    200 // 2 seconds (2-3 block buffer for high-frequency chains)
 }
 
 fn default_enable_coordinated_sending() -> bool {
@@ -196,10 +196,10 @@ impl RawConfig {
 
         let settings = builder
             .build()
-            .map_err(|e| Error::Config(format!("Failed to build config: {}", e)))?;
+            .map_err(|e| Error::Config(format!("Failed to build config: {e}")))?;
 
         settings
             .try_deserialize()
-            .map_err(|e| Error::Config(format!("Failed to deserialize config: {}", e)))
+            .map_err(|e| Error::Config(format!("Failed to deserialize config: {e}")))
     }
 }

@@ -303,28 +303,18 @@ impl<P: alloy::providers::Provider + Clone + 'static> MessageScheduler<P> {
         schedule_queue: &Arc<Mutex<BinaryHeap<ScheduledMessage>>>,
     ) -> Option<Instant> {
         let now = Utc::now();
-        let mut ready_messages = Vec::new();
+        let mut ready_message_ids = Vec::with_capacity(512); // Optimized for 100 TPS with 2s delay + 10ms spacing: handles 400+ message batches
         let mut next_wake_time: Option<Instant> = None;
 
-        // Process messages from priority queue
+        // OPTIMIZATION: Minimize lock hold time - only extract message IDs
         {
             let mut queue = schedule_queue.lock().await;
 
-            // Extract all ready messages from the priority queue
+            // Extract ready message IDs (minimal work while holding lock)
             while let Some(scheduled) = queue.peek() {
                 if scheduled.send_time <= now {
                     let scheduled = queue.pop().unwrap();
-
-                    // Get the message from DashMap and remove it
-                    if let Some((_, message)) = pending_messages.remove(&scheduled.message_id) {
-                        ready_messages.push(message);
-                        debug!("Message {} is ready to send", scheduled.message_id);
-                    } else {
-                        warn!(
-                            "Message {} not found in pending messages",
-                            scheduled.message_id
-                        );
-                    }
+                    ready_message_ids.push(scheduled.message_id);
                 } else {
                     // Calculate next wake time based on the earliest remaining message
                     let time_until_ready = scheduled.send_time - now;
@@ -337,24 +327,39 @@ impl<P: alloy::providers::Provider + Clone + 'static> MessageScheduler<P> {
                     break;
                 }
             }
-        }
+        } // Lock released here - much faster!
 
-        // Send ready messages sequentially with proper spacing
-        if !ready_messages.is_empty() {
-            let message_count = ready_messages.len();
-            info!(
-                "Sending {} coordinated messages sequentially",
-                message_count
-            );
+        // Process messages outside the lock to avoid contention
+        if !ready_message_ids.is_empty() {
+            let mut ready_messages = Vec::with_capacity(ready_message_ids.len());
 
-            for (i, message) in ready_messages.into_iter().enumerate() {
-                Self::send_message(decryption_handler, message).await;
+            // Retrieve messages from DashMap (lock-free operations)
+            for message_id in ready_message_ids {
+                if let Some((_, message)) = pending_messages.remove(&message_id) {
+                    ready_messages.push(message);
+                    debug!("Message {} is ready to send", message_id);
+                } else {
+                    warn!("Message {} not found in pending messages", message_id);
+                }
+            }
 
-                // Apply message spacing between sends (except for the last message)
-                if i < message_count - 1 {
-                    let spacing = Duration::from_millis(config.message_spacing_ms);
-                    if !spacing.is_zero() {
-                        tokio::time::sleep(spacing).await;
+            // Send ready messages sequentially with proper spacing
+            if !ready_messages.is_empty() {
+                let message_count = ready_messages.len();
+                info!(
+                    "Sending {} coordinated messages sequentially",
+                    message_count
+                );
+
+                for (i, message) in ready_messages.into_iter().enumerate() {
+                    Self::send_message(decryption_handler, message).await;
+
+                    // Apply message spacing between sends (except for the last message)
+                    if i < message_count - 1 {
+                        let spacing = Duration::from_millis(config.message_spacing_ms);
+                        if !spacing.is_zero() {
+                            tokio::time::sleep(spacing).await;
+                        }
                     }
                 }
             }
@@ -392,23 +397,25 @@ impl<P: alloy::providers::Provider + Clone + 'static> MessageScheduler<P> {
     }
 
     /// Clean up old messages to prevent memory leaks
+    /// OPTIMIZED: Single-pass cleanup without temporary allocations
     async fn cleanup_old_messages(&self) {
-        const TTL_HOURS: i64 = 1; // Messages older than 1 hour are considered stale == QUICK NOT OPTIMIZED APPROACH
+        const TTL_HOURS: i64 = 1; // Messages older than 1 hour are considered stale
         let cutoff_time = Utc::now() - chrono::Duration::hours(TTL_HOURS);
+        let mut removed_count = 0;
 
-        let mut to_remove = Vec::new();
-
-        // Find messages older than TTL
-        for entry in self.pending_messages.iter() {
-            if entry.value().created_at < cutoff_time {
-                to_remove.push(entry.key().clone());
+        // OPTIMIZATION: Single-pass removal using retain pattern
+        self.pending_messages.retain(|message_id, message| {
+            if message.created_at < cutoff_time {
+                warn!("Removed stale message {} (TTL exceeded)", message_id);
+                removed_count += 1;
+                false // Remove this entry
+            } else {
+                true // Keep this entry
             }
-        }
+        });
 
-        // Remove stale messages
-        for message_id in to_remove {
-            self.pending_messages.remove(&message_id);
-            warn!("Removed stale message {} (TTL exceeded)", message_id);
+        if removed_count > 0 {
+            info!("TTL cleanup removed {} stale messages", removed_count);
         }
     }
 

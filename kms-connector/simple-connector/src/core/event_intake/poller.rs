@@ -19,6 +19,45 @@ use tracing::{debug, error, info, warn};
 
 use crate::{core::config::Config, error::Result, gw_adapters::events::KmsCoreEvent};
 
+/// Event statistics for monitoring block polling
+#[derive(Debug, Default)]
+struct EventStats {
+    events_sent: AtomicU64,
+    events_dropped: AtomicU64,
+    blocks_processed: AtomicU64,
+    last_sent_timestamp: AtomicU64,
+}
+
+impl EventStats {
+    fn increment_sent(&self) {
+        self.events_sent.fetch_add(1, Ordering::Relaxed);
+        self.last_sent_timestamp.store(
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_secs(),
+            Ordering::Relaxed,
+        );
+    }
+
+    fn increment_dropped(&self) {
+        self.events_dropped.fetch_add(1, Ordering::Relaxed);
+    }
+
+    fn increment_blocks_processed(&self) {
+        self.blocks_processed.fetch_add(1, Ordering::Relaxed);
+    }
+
+    fn get_stats(&self) -> (u64, u64, u64, u64) {
+        (
+            self.events_sent.load(Ordering::Relaxed),
+            self.events_dropped.load(Ordering::Relaxed),
+            self.blocks_processed.load(Ordering::Relaxed),
+            self.last_sent_timestamp.load(Ordering::Relaxed),
+        )
+    }
+}
+
 /// Configuration for block polling behavior
 #[derive(Debug, Clone)]
 pub struct PollingConfig {
@@ -62,6 +101,9 @@ pub struct BlockPoller<P> {
     decryption_address: Address,
     gateway_config_address: Address,
 
+    // Event statistics
+    stats: Arc<EventStats>,
+
     // Shutdown coordination
     shutdown_rx: broadcast::Receiver<()>,
 }
@@ -86,7 +128,49 @@ impl<P: Provider + Clone + 'static> BlockPoller<P> {
             current_block: AtomicU64::new(starting_block),
             latest_block: AtomicU64::new(0),
             is_paused: AtomicBool::new(false),
+            stats: Arc::new(EventStats::default()),
             shutdown_rx: shutdown,
+        }
+    }
+
+    /// Schedule periodic event statistics logging
+    async fn schedule_log_event_stats(
+        stats: Arc<EventStats>,
+        event_tx: broadcast::Sender<KmsCoreEvent>,
+        mut shutdown_rx: broadcast::Receiver<()>,
+    ) {
+        info!(
+            "📊 Block polling event statistics logging task started - will report every 5 minutes"
+        );
+        let mut interval = tokio::time::interval(Duration::from_secs(300)); // 5 minutes
+        interval.tick().await; // Skip first immediate tick
+
+        loop {
+            tokio::select! {
+                _ = interval.tick() => {
+                    let (sent, dropped, blocks_processed, last_timestamp) = stats.get_stats();
+                    let receiver_count = event_tx.receiver_count();
+
+                    let time_since_last = if last_timestamp > 0 {
+                        std::time::SystemTime::now()
+                            .duration_since(std::time::UNIX_EPOCH)
+                            .unwrap_or_default()
+                            .as_secs()
+                            .saturating_sub(last_timestamp)
+                    } else {
+                        0
+                    };
+
+                    info!(
+                        "📊 Block Polling Event Stats - Receivers: {}, Events Sent: {}, Dropped: {}, Blocks Processed: {}, Last event: {}s ago",
+                        receiver_count, sent, dropped, blocks_processed, time_since_last
+                    );
+                }
+                _ = shutdown_rx.recv() => {
+                    info!("📊 Event statistics logging task shutting down");
+                    break;
+                }
+            }
         }
     }
 
@@ -114,6 +198,16 @@ impl<P: Provider + Clone + 'static> BlockPoller<P> {
             "Starting block polling from block {}",
             self.current_block.load(Ordering::Relaxed)
         );
+
+        // Spawn event statistics logging task
+        let stats_clone = Arc::clone(&self.stats);
+        let event_tx_clone = event_tx.clone();
+        let stats_shutdown = self.shutdown_rx.resubscribe();
+        tokio::spawn(Self::schedule_log_event_stats(
+            stats_clone,
+            event_tx_clone,
+            stats_shutdown,
+        ));
 
         let mut shutdown = self.shutdown_rx.resubscribe();
         let mut last_poll_time = Instant::now();
@@ -252,14 +346,32 @@ impl<P: Provider + Clone + 'static> BlockPoller<P> {
 
         debug!("Found {} logs in block {}", logs.len(), block_number);
 
+        // Track block processing
+        self.stats.increment_blocks_processed();
+        let mut events_in_block = 0;
+
         // Process each log and convert to events
         for log in logs {
             if let Some(event) = self.log_to_event(log, block_timestamp).await {
                 // Send event to processing pipeline
-                if let Err(e) = event_tx.send(event) {
-                    warn!("Failed to send event to processing pipeline: {}", e);
+                match event_tx.send(event) {
+                    Ok(_) => {
+                        self.stats.increment_sent();
+                        events_in_block += 1;
+                    }
+                    Err(e) => {
+                        self.stats.increment_dropped();
+                        warn!("Failed to send event to processing pipeline: {}", e);
+                    }
                 }
             }
+        }
+
+        if events_in_block > 0 {
+            debug!(
+                "Processed {} events from block {}",
+                events_in_block, block_number
+            );
         }
 
         Ok(())
@@ -553,8 +665,7 @@ impl<P: Provider + Clone + 'static> BlockPoller<P> {
             Err(e) => {
                 error!("Failed to fetch latest block number: {}", e);
                 Err(crate::error::Error::Contract(format!(
-                    "Failed to get latest block: {}",
-                    e
+                    "Failed to get latest block: {e}"
                 )))
             }
         }
