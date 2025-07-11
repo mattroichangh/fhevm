@@ -34,16 +34,18 @@ A coprocessor has both a transaction sender and a signer assigned to it:
 - `txSenderAddress` : address of the account that will send transactions to the fhevm Gateway.
 - `signerAddress` : address associated to the public key used to sign results sent to the fhevm Gateway.
 
-The current list of [active](#lifecycle) coprocessors' transaction senders and signers can be retrieved using the following view functions:
+The list of coprocessors' transaction senders and signers from a context can be retrieved using the following view functions:
 
-- `getCoprocessorTxSenders()`: get all the active coprocessors' transaction senders.
-- `getCoprocessorSigners()`: get all the active coprocessors' signers.
+- `getCoprocessorTxSendersFromContext(uint256 contextId)`: get all the active coprocessors' transaction senders from a context.
+- `getCoprocessorSignersFromContext(uint256 contextId)`: get all the active coprocessors' signers from a context.
 
 The transaction sender and signer addresses are allowed to be the same for a given coprocessor.
 
-Additionally, the transaction sender address is used for identifying a coprocessor and may be referred to its "identity". In particular, these addresses can be used as inputs to following view function for [active](#lifecycle) coprocessors:
+Additionally, the transaction sender address is used for identifying a coprocessor and may be referred to its "identity". In particular, these addresses can be used as inputs to the following view function:
 
-- `getCoprocessor(address coprocessorTxSenderAddress)`: get an active coprocessor's metadata.
+- `getCoprocessorFromContext(uint256 contextId, address coprocessorTxSenderAddress)`: get an active coprocessor's metadata from a context.
+
+The above functions can be combined with the `getActiveCoprocessorContextId()` function to get information about the coprocessors from the current [`active`](#lifecycle) context.
 
 ## Coprocessor context
 
@@ -53,6 +55,11 @@ A set of coprocessors is called a coprocessor context and must be constituted of
 - `previousContextId`: identifier of the previous coprocessor context.
 - `featureSet`: feature set of the coprocessor context, used for updating the coprocessors' software.
 - `coprocessors`: list of coprocessors in the coprocessor context.
+
+It is possible to get information about the current [`active`](#lifecycle) coprocessor context using the following view functions:
+
+- `getActiveCoprocessorContext()`: get the current active coprocessor context.
+- `getActiveCoprocessorContextId()`: get the current active coprocessor context ID.
 
 Currently, the initial coprocessor context is set at deployment of the `CoprocessorContexts` contract and put directly in the [`active`](#lifecycle) state. In this particular case, the `previousContextId` is set to 0 since there is no previous coprocessor context to refer to.
 

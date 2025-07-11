@@ -161,25 +161,6 @@ contract CoprocessorContexts is ICoprocessorContexts, Ownable2StepUpgradeable, U
     }
 
     /**
-     * @dev See {ICoprocessorContexts-getCoprocessorFromContext}.
-     */
-    function getCoprocessorFromContext(
-        uint256 contextId,
-        address coprocessorTxSenderAddress
-    ) public view virtual ensureContextInitialized(contextId) returns (Coprocessor memory) {
-        CoprocessorContextsStorage storage $ = _getCoprocessorContextsStorage();
-        Coprocessor memory coprocessor = $.coprocessors[contextId][coprocessorTxSenderAddress];
-
-        // A null address for the transaction sender address indicates that the coprocessor is not part
-        // of the coprocessor context
-        if (coprocessor.txSenderAddress == address(0)) {
-            revert NotCoprocessorFromContext(contextId, coprocessorTxSenderAddress);
-        }
-
-        return coprocessor;
-    }
-
-    /**
      * @dev See {ICoprocessorContexts-addCoprocessorContext}.
      */
     function addCoprocessorContext(
@@ -391,29 +372,38 @@ contract CoprocessorContexts is ICoprocessorContexts, Ownable2StepUpgradeable, U
     }
 
     /**
-     * @dev See {ICoprocessorContexts-getCoprocessor}.
+     * @dev See {ICoprocessorContexts-getCoprocessorFromContext}.
      */
-    function getCoprocessor(address coprocessorTxSenderAddress) external view virtual returns (Coprocessor memory) {
-        uint256 activeContextId = getActiveCoprocessorContextId();
-        return getCoprocessorFromContext(activeContextId, coprocessorTxSenderAddress);
+    function getCoprocessorFromContext(
+        uint256 contextId,
+        address coprocessorTxSenderAddress
+    ) public view virtual ensureContextInitialized(contextId) returns (Coprocessor memory) {
+        CoprocessorContextsStorage storage $ = _getCoprocessorContextsStorage();
+        Coprocessor memory coprocessor = $.coprocessors[contextId][coprocessorTxSenderAddress];
+
+        // A null address for the transaction sender address indicates that the coprocessor is not part
+        // of the coprocessor context
+        if (coprocessor.txSenderAddress == address(0)) {
+            revert NotCoprocessorFromContext(contextId, coprocessorTxSenderAddress);
+        }
+
+        return coprocessor;
     }
 
     /**
-     * @dev See {ICoprocessorContexts-getCoprocessorTxSenders}.
+     * @dev See {ICoprocessorContexts-getCoprocessorTxSendersFromContext}.
      */
-    function getCoprocessorTxSenders() external view virtual returns (address[] memory) {
-        uint256 activeContextId = getActiveCoprocessorContextId();
+    function getCoprocessorTxSendersFromContext(uint256 contextId) external view virtual returns (address[] memory) {
         CoprocessorContextsStorage storage $ = _getCoprocessorContextsStorage();
-        return $.coprocessorTxSenderAddresses[activeContextId];
+        return $.coprocessorTxSenderAddresses[contextId];
     }
 
     /**
-     * @dev See {ICoprocessorContexts-getCoprocessorSigners}.
+     * @dev See {ICoprocessorContexts-getCoprocessorSignersFromContext}.
      */
-    function getCoprocessorSigners() external view virtual returns (address[] memory) {
-        uint256 activeContextId = getActiveCoprocessorContextId();
+    function getCoprocessorSignersFromContext(uint256 contextId) external view virtual returns (address[] memory) {
         CoprocessorContextsStorage storage $ = _getCoprocessorContextsStorage();
-        return $.coprocessorSignerAddresses[activeContextId];
+        return $.coprocessorSignerAddresses[contextId];
     }
 
     /**

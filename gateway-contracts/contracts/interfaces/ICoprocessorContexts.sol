@@ -172,22 +172,6 @@ interface ICoprocessorContexts {
     function getActiveCoprocessorContext() external view returns (CoprocessorContext memory);
 
     /**
-     * @notice Get the metadata of the coprocessor associated to the transaction sender within the active coprocessor context.
-     * This function reverts if there is no active coprocessor context.
-     * There should always be a single active coprocessor context defined in the gateway, as we do not
-     * allow manually setting active coprocessor contexts to `Compromised` or `Destroyed` states.
-     * We still consider some reverts to prevent any unexpected behaviors that could cause the protocol
-     * to behave in an unexpected manner (ex: by considering a null contextId).
-     * @param contextId The coprocessor context ID.
-     * @param coprocessorTxSenderAddress The signer address of the coprocessor to get.
-     * @return The coprocessor's metadata.
-     */
-    function getCoprocessorFromContext(
-        uint256 contextId,
-        address coprocessorTxSenderAddress
-    ) external view returns (Coprocessor memory);
-
-    /**
      * @notice Add a new coprocessor context.
      * @param featureSet The feature set.
      * @param coprocessors The set of coprocessors representing the coprocessor context.
@@ -270,24 +254,30 @@ interface ICoprocessorContexts {
     function getCoprocessorMajorityThresholdFromContext(uint256 contextId) external view returns (uint256);
 
     /**
-     * @notice Get the metadata of the coprocessor associated to the transaction sender within the
-     * active coprocessor context.
+     * @notice Get the metadata of the coprocessor associated to the transaction sender within a coprocessor context.
+     * @param contextId The coprocessor context ID.
      * @param coprocessorTxSenderAddress The signer address of the coprocessor to get.
      * @return The coprocessor's metadata.
      */
-    function getCoprocessor(address coprocessorTxSenderAddress) external view returns (Coprocessor memory);
+    function getCoprocessorFromContext(
+        uint256 contextId,
+        address coprocessorTxSenderAddress
+    ) external view returns (Coprocessor memory);
 
     /**
-     * @notice Get the list of all active coprocessors' transaction sender addresses.
-     * @return The list of active coprocessors' transaction sender addresses.
+     * @notice Get the list of all coprocessors' transaction sender addresses from a context.
+     * @param contextId The coprocessor context ID.
+     * @return The list of coprocessors' transaction sender addresses from a context.
      */
-    function getCoprocessorTxSenders() external view returns (address[] memory);
+    function getCoprocessorTxSendersFromContext(uint256 contextId) external view returns (address[] memory);
 
     /**
-     * @notice Get the list of all active coprocessors' signer addresses.
-     * @return The list of active coprocessors' signer addresses.
+     * @notice Get the list of all coprocessors' signer addresses from a context.
+     * @param contextId The coprocessor context ID.
+     * @return The list of coprocessors' signer addresses from a context.
      */
-    function getCoprocessorSigners() external view returns (address[] memory);
+    function getCoprocessorSignersFromContext(uint256 contextId) external view returns (address[] memory);
+
 
     /**
      * @notice Get the context status of a coprocessor context.

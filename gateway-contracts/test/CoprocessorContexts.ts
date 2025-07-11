@@ -197,14 +197,8 @@ describe("CoprocessorContexts", function () {
         expect(coprocessorMajorityThreshold).to.equal((coprocessorTxSenders.length >> 1) + 1);
       });
 
-      it("Should get a coprocessor from the active context", async function () {
-        const coprocessor = await coprocessorContexts.getCoprocessor(coprocessorTxSenders[0].address);
-
-        expect(coprocessor).to.deep.equal(toValues(coprocessors[0]));
-      });
-
-      it("Should get all coprocessor transaction sender addresses", async function () {
-        const coprocessorTxSenderAddresses = await coprocessorContexts.getCoprocessorTxSenders();
+      it("Should get all coprocessor transaction sender addresses from the context", async function () {
+        const coprocessorTxSenderAddresses = await coprocessorContexts.getCoprocessorTxSendersFromContext(contextId);
 
         // Check that the number of coprocessor transaction sender addresses is correct
         expect(coprocessorTxSenderAddresses.length).to.equal(coprocessorTxSenders.length);
@@ -215,8 +209,8 @@ describe("CoprocessorContexts", function () {
         }
       });
 
-      it("Should get all coprocessor signer addresses", async function () {
-        const coprocessorSignerAddresses = await coprocessorContexts.getCoprocessorSigners();
+      it("Should get all coprocessor signer addresses from the context", async function () {
+        const coprocessorSignerAddresses = await coprocessorContexts.getCoprocessorSignersFromContext(contextId);
 
         // Check that the number of coprocessor signer addresses is correct
         expect(coprocessorSignerAddresses.length).to.equal(coprocessorSigners.length);
