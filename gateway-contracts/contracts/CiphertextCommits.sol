@@ -213,7 +213,7 @@ contract CiphertextCommits is
                 ctHandles[i],
                 $._keyIds[ctHandles[i]],
                 $._snsCiphertextDigests[ctHandles[i]],
-                $._coprocessorTxSenderAddresses[addCiphertextHash]
+                new string[](1)
             );
         }
 

@@ -61,7 +61,7 @@ struct SnsCiphertextMaterial {
     bytes32 ctHandle;
     uint256 keyId;
     bytes32 snsCiphertextDigest;
-    address[] coprocessorTxSenderAddresses;
+    string[] coprocessorTxSenderAddresses;
 }
 
 /**
