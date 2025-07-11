@@ -10,7 +10,7 @@ use crate::{
 };
 use alloy::providers::Provider;
 use std::sync::Arc;
-use tokio::sync::{broadcast, mpsc};
+use tokio::sync::broadcast;
 use tracing::{error, info};
 
 /// Core KMS connector that handles all interactions with the Gateway
@@ -28,14 +28,14 @@ impl<P: Provider + Clone + 'static> KmsCoreConnector<P> {
         config: Config,
         kms_client: Arc<KmsServiceImpl>,
         shutdown: broadcast::Receiver<()>,
-    ) -> (Self, mpsc::Receiver<KmsCoreEvent>) {
-        let (event_tx, event_rx) = mpsc::channel(config.channel_size);
+    ) -> (Self, broadcast::Receiver<KmsCoreEvent>) {
+        let (event_tx, _) = broadcast::channel(config.channel_size);
 
         let events = EventsAdapter::new(
             Arc::clone(&provider),
             config.decryption_address,
             config.gateway_config_address,
-            event_tx,
+            event_tx.clone(),
         );
 
         // Possible gas limit
@@ -58,11 +58,11 @@ impl<P: Provider + Clone + 'static> KmsCoreConnector<P> {
             shutdown: Some(shutdown),
         };
 
-        (connector, event_rx)
+        (connector, event_tx.subscribe())
     }
 
     /// Start the connector
-    pub async fn start(&mut self, event_rx: mpsc::Receiver<KmsCoreEvent>) -> Result<()> {
+    pub async fn start(&mut self, event_rx: broadcast::Receiver<KmsCoreEvent>) -> Result<()> {
         info!("Starting KMS Core Connector...");
 
         // Initialize event subscriptions

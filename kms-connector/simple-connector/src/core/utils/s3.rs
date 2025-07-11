@@ -1,6 +1,6 @@
 use alloy::{hex::encode, primitives::Address, providers::Provider, transports::http::reqwest};
 use dashmap::DashMap;
-use fhevm_gateway_rust_bindings::gatewayconfig::GatewayConfig;
+// use fhevm_gateway_rust_bindings::gatewayconfig::GatewayConfig;
 use sha3::{Digest, Keccak256};
 use std::{
     sync::{Arc, LazyLock},
@@ -30,15 +30,18 @@ fn log_cache_state() {
     }
 }
 
-/// Retrieves the S3 bucket URL for a coprocessor from the GatewayConfig contract
+/// Returns the hardcoded S3 bucket URL for localhost development
 pub async fn get_s3_url_from_gateway_config<P: Provider>(
     coprocessor_address: Address,
-    gateway_config_address: Address,
-    provider: Arc<P>,
+    _gateway_config_address: Address,
+    _provider: Arc<P>,
 ) -> Option<String> {
+    // Hardcoded S3 bucket URL for localhost development
+    let s3_bucket_url = "http://localhost:9000/ct128".to_string();
+
     info!(
-        "Attempting to get S3 bucket URL for coprocessor {:?}",
-        coprocessor_address
+        "Using hardcoded S3 bucket URL for coprocessor {:?}: {}",
+        coprocessor_address, s3_bucket_url
     );
 
     // Try to find a cached S3 bucket URL for any of the coprocessors
@@ -51,41 +54,9 @@ pub async fn get_s3_url_from_gateway_config<P: Provider>(
         return Some(url.value().clone());
     }
 
-    // If no cached URL found, query the GatewayConfig contract for the first available coprocessor
+    // Cache the hardcoded URL for future use
     info!(
-        "CACHE MISS: Querying GatewayConfig contract for coprocessor {:?} S3 bucket URL",
-        coprocessor_address
-    );
-
-    // Create GatewayConfig contract instance
-    let contract = GatewayConfig::new(gateway_config_address, provider);
-
-    // Call getCoprocessor method
-    let coprocessor = match contract.getCoprocessor(coprocessor_address).call().await {
-        Ok(result) => result,
-        Err(e) => {
-            warn!(
-                "GatewayConfig contract call failed for coprocessor {:?}: {}",
-                coprocessor_address, e
-            );
-            return None;
-        }
-    };
-
-    // Extract S3 bucket URL from the coprocessor
-    let s3_bucket_url = coprocessor._0.s3BucketUrl.to_string();
-
-    if s3_bucket_url.is_empty() {
-        warn!(
-            "Coprocessor {:?} returned empty S3 bucket URL",
-            coprocessor_address
-        );
-        return None;
-    }
-
-    // Cache the URL for future use
-    info!(
-        "CACHE UPDATE: Adding S3 bucket URL for coprocessor {:?}: {}",
+        "CACHE UPDATE: Adding hardcoded S3 bucket URL for coprocessor {:?}: {}",
         coprocessor_address, s3_bucket_url
     );
     S3_BUCKET_CACHE.insert(coprocessor_address, s3_bucket_url.clone());
@@ -94,7 +65,7 @@ pub async fn get_s3_url_from_gateway_config<P: Provider>(
     log_cache_state();
 
     info!(
-        "Successfully retrieved and cached S3 bucket URL for coprocessor {:?}: {}",
+        "Successfully set hardcoded S3 bucket URL for coprocessor {:?}: {}",
         coprocessor_address, s3_bucket_url
     );
     Some(s3_bucket_url)

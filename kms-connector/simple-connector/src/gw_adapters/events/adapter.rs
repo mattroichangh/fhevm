@@ -6,26 +6,56 @@ use std::{
     fmt::Debug,
     sync::{
         Arc, Mutex,
-        atomic::{AtomicBool, Ordering},
+        atomic::{AtomicBool, AtomicU64, Ordering},
     },
     time::Duration,
 };
-use tokio::{sync::mpsc, task::JoinHandle};
+use tokio::{sync::broadcast, task::JoinHandle};
 use tokio_stream::StreamExt;
 use tracing::{debug, error, info, warn};
 
-/// Default event processing timeout
-const EVENT_TIMEOUT: Duration = Duration::from_secs(60);
+/// Event statistics for monitoring
+#[derive(Debug, Default)]
+struct EventStats {
+    events_sent: AtomicU64,
+    events_dropped: AtomicU64,
+    last_sent_timestamp: AtomicU64,
+}
+
+impl EventStats {
+    fn increment_sent(&self) {
+        self.events_sent.fetch_add(1, Ordering::Relaxed);
+        self.last_sent_timestamp.store(
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_secs(),
+            Ordering::Relaxed,
+        );
+    }
+
+    fn increment_dropped(&self) {
+        self.events_dropped.fetch_add(1, Ordering::Relaxed);
+    }
+
+    fn get_stats(&self) -> (u64, u64, u64) {
+        (
+            self.events_sent.load(Ordering::Relaxed),
+            self.events_dropped.load(Ordering::Relaxed),
+            self.last_sent_timestamp.load(Ordering::Relaxed),
+        )
+    }
+}
 
 /// Events that can be processed by the KMS Core
 #[derive(Clone, Debug)]
 pub enum KmsCoreEvent {
-    /// Public decryption request
-    PublicDecryptionRequest(Decryption::PublicDecryptionRequest),
+    /// Public decryption request with block timestamp
+    PublicDecryptionRequest(Decryption::PublicDecryptionRequest, u64),
     /// Public decryption response
     PublicDecryptionResponse(Decryption::PublicDecryptionResponse),
-    /// User decryption request
-    UserDecryptionRequest(Decryption::UserDecryptionRequest),
+    /// User decryption request with block timestamp
+    UserDecryptionRequest(Decryption::UserDecryptionRequest, u64),
     /// User decryption response
     UserDecryptionResponse(Decryption::UserDecryptionResponse),
     /// Preprocess keygen request
@@ -56,9 +86,10 @@ pub struct EventsAdapter<P> {
     provider: Arc<P>,
     decryption: Address,
     gateway_config: Address,
-    event_tx: mpsc::Sender<KmsCoreEvent>,
+    event_tx: broadcast::Sender<KmsCoreEvent>,
     running: Arc<AtomicBool>,
     handles: Arc<Mutex<Vec<JoinHandle<()>>>>,
+    stats: Arc<EventStats>,
 }
 
 impl<P: Provider + Clone + 'static> EventsAdapter<P> {
@@ -67,7 +98,7 @@ impl<P: Provider + Clone + 'static> EventsAdapter<P> {
         provider: Arc<P>,
         decryption: Address,
         gateway_config: Address,
-        event_tx: mpsc::Sender<KmsCoreEvent>,
+        event_tx: broadcast::Sender<KmsCoreEvent>,
     ) -> Self {
         Self {
             provider,
@@ -76,6 +107,7 @@ impl<P: Provider + Clone + 'static> EventsAdapter<P> {
             event_tx,
             running: Arc::new(AtomicBool::new(true)),
             handles: Arc::new(Mutex::new(Vec::new())),
+            stats: Arc::new(EventStats::default()),
         }
     }
 
@@ -88,8 +120,12 @@ impl<P: Provider + Clone + 'static> EventsAdapter<P> {
         let gateway_config = self.gateway_config;
         let event_tx = self.event_tx.clone();
         let running = self.running.clone();
+        let stats = self.stats.clone();
 
-        tokio::spawn(schedule_log_queue_capacity(event_tx.clone()));
+        tokio::spawn(Self::schedule_log_event_stats(
+            event_tx.clone(),
+            stats.clone(),
+        ));
         let handle = tokio::spawn(async move {
             while running.load(Ordering::SeqCst) {
                 Self::subscribe_to_events(
@@ -98,6 +134,7 @@ impl<P: Provider + Clone + 'static> EventsAdapter<P> {
                     gateway_config,
                     event_tx.clone(),
                     running.clone(),
+                    stats.clone(),
                 )
                 .await
             }
@@ -113,8 +150,9 @@ impl<P: Provider + Clone + 'static> EventsAdapter<P> {
         provider: Arc<P>,
         decryption: Address,
         gateway_config: Address,
-        event_tx: mpsc::Sender<KmsCoreEvent>,
+        event_tx: broadcast::Sender<KmsCoreEvent>,
         running: Arc<AtomicBool>,
+        stats: Arc<EventStats>,
     ) {
         let mut tasks = vec![
             tokio::spawn(Self::subscribe_to_decryption_events(
@@ -122,12 +160,14 @@ impl<P: Provider + Clone + 'static> EventsAdapter<P> {
                 Arc::clone(&provider),
                 event_tx.clone(),
                 running.clone(),
+                stats.clone(),
             )),
             tokio::spawn(Self::subscribe_to_gateway_config_events(
                 gateway_config,
                 provider,
-                event_tx,
+                event_tx.clone(),
                 running.clone(),
+                stats.clone(),
             )),
         ];
 
@@ -235,12 +275,13 @@ impl<P: Provider + Clone + 'static> EventsAdapter<P> {
     async fn subscribe_to_decryption_events(
         decryption: Address,
         provider: Arc<P>,
-        event_tx: mpsc::Sender<KmsCoreEvent>,
+        event_tx: broadcast::Sender<KmsCoreEvent>,
         running: Arc<AtomicBool>,
+        stats: Arc<EventStats>,
     ) -> Result<()> {
         info!("Starting Decryption event subscriptions...");
 
-        let contract = Decryption::new(decryption, provider);
+        let contract = Decryption::new(decryption, provider.clone());
         let public_filter = contract.PublicDecryptionRequest_filter().watch().await?;
         info!("✓ Subscribed to PublicDecryptionRequest events");
 
@@ -259,8 +300,8 @@ impl<P: Provider + Clone + 'static> EventsAdapter<P> {
             }
 
             tokio::select! {
-                result = public_stream.next() => Self::handle_event(result, event_tx.clone(), KmsCoreEvent::PublicDecryptionRequest, "PublicDecryptionRequest".to_string()).await?,
-                result = user_stream.next() => Self::handle_event(result, event_tx.clone(), KmsCoreEvent::UserDecryptionRequest, "UserDecryptionRequest".to_string()).await?,
+                result = public_stream.next() => Self::handle_event(result, event_tx.clone(), KmsCoreEvent::PublicDecryptionRequest, "PublicDecryptionRequest".to_string(), stats.clone(), provider.clone()).await?,
+                result = user_stream.next() => Self::handle_event(result, event_tx.clone(), KmsCoreEvent::UserDecryptionRequest, "UserDecryptionRequest".to_string(), stats.clone(), provider.clone()).await?,
             }
         }
 
@@ -271,8 +312,9 @@ impl<P: Provider + Clone + 'static> EventsAdapter<P> {
     async fn subscribe_to_gateway_config_events(
         address: Address,
         provider: Arc<P>,
-        event_tx: mpsc::Sender<KmsCoreEvent>,
+        event_tx: broadcast::Sender<KmsCoreEvent>,
         running: Arc<AtomicBool>,
+        stats: Arc<EventStats>,
     ) -> Result<()> {
         info!("Starting KmsManagement event subscriptions...");
 
@@ -310,23 +352,25 @@ impl<P: Provider + Clone + 'static> EventsAdapter<P> {
             }
 
             tokio::select! {
-                result = preprocess_keygen_request_stream.next() => Self::handle_event(result, event_tx.clone(), KmsCoreEvent::PreprocessKeygenRequest, "PreprocessKeygenRequest".to_string()).await?,
-                result = preprocess_kskgen_request_stream.next() => Self::handle_event(result, event_tx.clone(), KmsCoreEvent::PreprocessKskgenRequest, "PreprocessKskgenRequest".to_string()).await?,
-                result = keygen_request_stream.next() => Self::handle_event(result, event_tx.clone(), KmsCoreEvent::KeygenRequest, "KeygenRequest".to_string()).await?,
-                result = crsgen_request_stream.next() => Self::handle_event(result, event_tx.clone(), KmsCoreEvent::CrsgenRequest, "CrsgenRequest".to_string()).await?,
-                result = kskgen_request_stream.next() => Self::handle_event(result, event_tx.clone(), KmsCoreEvent::KskgenRequest, "KskgenRequest".to_string()).await?,
+                result = preprocess_keygen_request_stream.next() => Self::handle_management_event(result, event_tx.clone(), KmsCoreEvent::PreprocessKeygenRequest, "PreprocessKeygenRequest".to_string(), stats.clone())?,
+                result = preprocess_kskgen_request_stream.next() => Self::handle_management_event(result, event_tx.clone(), KmsCoreEvent::PreprocessKskgenRequest, "PreprocessKskgenRequest".to_string(), stats.clone())?,
+                result = keygen_request_stream.next() => Self::handle_management_event(result, event_tx.clone(), KmsCoreEvent::KeygenRequest, "KeygenRequest".to_string(), stats.clone())?,
+                result = crsgen_request_stream.next() => Self::handle_management_event(result, event_tx.clone(), KmsCoreEvent::CrsgenRequest, "CrsgenRequest".to_string(), stats.clone())?,
+                result = kskgen_request_stream.next() => Self::handle_management_event(result, event_tx.clone(), KmsCoreEvent::KskgenRequest, "KskgenRequest".to_string(), stats.clone())?,
             }
         }
 
         Ok(())
     }
 
-    /// Helper function to handle event stream results
+    /// Helper function to handle event stream results for coordinated events
     async fn handle_event<T: Debug>(
         result: Option<Result<(T, EthLog), alloy::sol_types::Error>>,
-        event_tx: mpsc::Sender<KmsCoreEvent>,
-        event_constructor: fn(T) -> KmsCoreEvent,
+        event_tx: broadcast::Sender<KmsCoreEvent>,
+        event_constructor: fn(T, u64) -> KmsCoreEvent,
         event_name: String,
+        stats: Arc<EventStats>,
+        provider: Arc<P>,
     ) -> Result<()> {
         let event = match result {
             Some(Ok((event, log))) => {
@@ -346,6 +390,106 @@ impl<P: Provider + Clone + 'static> EventsAdapter<P> {
                 info!("  Topics: {:?}", log.topics());
                 debug!("  Raw Data: {:?}", log.data());
                 debug!("  Decoded Event: {:#?}", event);
+
+                // Extract block timestamp
+                let block_timestamp = if let Some(block_number) = log.block_number {
+                    match provider.get_block(block_number.into()).await {
+                        Ok(Some(block)) => block.header.timestamp,
+                        Ok(None) => {
+                            warn!("Block {} not found, using current timestamp", block_number);
+                            std::time::SystemTime::now()
+                                .duration_since(std::time::UNIX_EPOCH)
+                                .unwrap_or_default()
+                                .as_secs()
+                        }
+                        Err(e) => {
+                            warn!(
+                                "Failed to get block {}: {}, using current timestamp",
+                                block_number, e
+                            );
+                            std::time::SystemTime::now()
+                                .duration_since(std::time::UNIX_EPOCH)
+                                .unwrap_or_default()
+                                .as_secs()
+                        }
+                    }
+                } else {
+                    warn!("No block number in log, using current timestamp");
+                    std::time::SystemTime::now()
+                        .duration_since(std::time::UNIX_EPOCH)
+                        .unwrap_or_default()
+                        .as_secs()
+                };
+
+                let core_event = event_constructor(event, block_timestamp);
+                debug!("🔎 Event processed: {:#?}", core_event);
+                core_event
+            }
+            Some(Err(e)) => {
+                error!("Error decoding {} event: {}", event_name, e);
+                return Err(anyhow::anyhow!(
+                    "Failed to decode {} event: {}",
+                    event_name,
+                    e
+                ));
+            }
+            None => {
+                debug!("Event stream ended for {}", event_name);
+                return Ok(());
+            }
+        };
+
+        // Send event via broadcast channel
+        match event_tx.send(event) {
+            Ok(receiver_count) => {
+                stats.increment_sent();
+                debug!(
+                    "Successfully sent {} event to {} receivers",
+                    event_name, receiver_count
+                );
+                Ok(())
+            }
+            Err(tokio::sync::broadcast::error::SendError(_)) => {
+                stats.increment_dropped();
+                warn!(
+                    "No receivers available for {} event - event dropped",
+                    event_name
+                );
+                Err(anyhow::anyhow!(
+                    "No receivers available for {} event",
+                    event_name
+                ))
+            }
+        }
+    }
+
+    /// Helper function to handle management event stream results (no coordination needed)
+    fn handle_management_event<T: Debug>(
+        result: Option<Result<(T, EthLog), alloy::sol_types::Error>>,
+        event_tx: broadcast::Sender<KmsCoreEvent>,
+        event_constructor: fn(T) -> KmsCoreEvent,
+        event_name: String,
+        stats: Arc<EventStats>,
+    ) -> Result<()> {
+        let event = match result {
+            Some(Ok((event, log))) => {
+                info!("[EVENT] 🔒 Received {} event:", event_name);
+                info!(
+                    "  Block: {}, Tx: {}, LogIdx: {}",
+                    log.block_number
+                        .map(|n| n.to_string())
+                        .unwrap_or_else(|| "N/A".to_string()),
+                    log.transaction_hash
+                        .map(|h| format!("0x{h}"))
+                        .unwrap_or_else(|| "N/A".to_string()),
+                    log.log_index
+                        .map(|i| i.to_string())
+                        .unwrap_or_else(|| "N/A".to_string())
+                );
+                info!("  Topics: {:?}", log.topics());
+                debug!("  Raw Data: {:?}", log.data());
+                debug!("  Decoded Event: {:#?}", event);
+
                 let core_event = event_constructor(event);
                 debug!("🔎 Event processed: {:#?}", core_event);
                 core_event
@@ -360,33 +504,59 @@ impl<P: Provider + Clone + 'static> EventsAdapter<P> {
             }
         };
 
-        // Simple timeout for event sending
-        match tokio::time::timeout(EVENT_TIMEOUT, event_tx.send(event.clone())).await {
-            Ok(Ok(_)) => {
-                debug!("Successfully sent {} event", event_name);
+        // Send event via broadcast channel
+        match event_tx.send(event) {
+            Ok(receiver_count) => {
+                stats.increment_sent();
+                debug!(
+                    "Successfully sent {} event to {} receivers",
+                    event_name, receiver_count
+                );
                 Ok(())
             }
-            Ok(Err(e)) => {
-                error!("Failed to send {}: {}", event_name, e);
-                Err(anyhow!("Failed to send {}: {}", event_name, e))
-            }
-            Err(_) => {
+            Err(tokio::sync::broadcast::error::SendError(_)) => {
+                stats.increment_dropped();
                 warn!(
-                    "Event send timeout for {}. Re-sending the event without timeout",
+                    "No receivers available for {} event - event dropped",
                     event_name
                 );
-                event_tx.send(event).await.map_err(anyhow::Error::from)
+                Err(anyhow::anyhow!(
+                    "No receivers available for {} event",
+                    event_name
+                ))
             }
         }
     }
-}
 
-/// Logs the status of the queue every 5 seconds.
-async fn schedule_log_queue_capacity(event_tx: mpsc::Sender<KmsCoreEvent>) {
-    let mut interval = tokio::time::interval(Duration::from_secs(5));
-    loop {
-        interval.tick().await;
-        info!("Capacity of the event queue: {}", event_tx.capacity());
+    /// Logs event statistics every 5 minutes with minimal output.
+    async fn schedule_log_event_stats(
+        event_tx: broadcast::Sender<KmsCoreEvent>,
+        stats: Arc<EventStats>,
+    ) {
+        let mut interval = tokio::time::interval(Duration::from_secs(300)); // 5 minutes
+
+        loop {
+            interval.tick().await;
+
+            let (sent, dropped, last_timestamp) = stats.get_stats();
+            let receiver_count = event_tx.receiver_count();
+
+            let time_since_last = if last_timestamp > 0 {
+                std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .unwrap_or_default()
+                    .as_secs()
+                    .saturating_sub(last_timestamp)
+            } else {
+                0
+            };
+
+            // Simple 5-minute status log
+            info!(
+                "📊 Event Stats - Receivers: {}, Sent: {}, Dropped: {}, Last event: {}s ago",
+                receiver_count, sent, dropped, time_since_last
+            );
+        }
     }
 }
 
