@@ -218,7 +218,8 @@ contract CiphertextCommits is
                 ctHandles[i],
                 $._keyIds[ctHandles[i]],
                 $._ciphertextDigests[ctHandles[i]],
-                $._coprocessorTxSenderAddresses[addCiphertextHash]
+                $._coprocessorTxSenderAddresses[addCiphertextHash],
+                $.inputVerificationContextId[addCiphertextHash]
             );
         }
 
@@ -243,7 +244,8 @@ contract CiphertextCommits is
                 ctHandles[i],
                 $._keyIds[ctHandles[i]],
                 $._snsCiphertextDigests[ctHandles[i]],
-                $._coprocessorTxSenderAddresses[addCiphertextHash]
+                $._coprocessorTxSenderAddresses[addCiphertextHash],
+                $.inputVerificationContextId[addCiphertextHash]
             );
         }
 

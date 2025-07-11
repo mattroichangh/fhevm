@@ -9,12 +9,14 @@ interface ICiphertextCommits {
         uint256 keyId;
         bytes32 ciphertextDigest;
         address[] coprocessorTxSenderAddresses;
+        uint256 coprocessorContextId;
     }
     struct SnsCiphertextMaterial {
         bytes32 ctHandle;
         uint256 keyId;
         bytes32 snsCiphertextDigest;
         address[] coprocessorTxSenderAddresses;
+        uint256 coprocessorContextId;
     }
 
     error CiphertextMaterialNotFound(bytes32 ctHandle);
@@ -111,6 +113,11 @@ interface ICiphertextCommits {
             "name": "coprocessorTxSenderAddresses",
             "type": "address[]",
             "internalType": "address[]"
+          },
+          {
+            "name": "coprocessorContextId",
+            "type": "uint256",
+            "internalType": "uint256"
           }
         ]
       }
@@ -152,6 +159,11 @@ interface ICiphertextCommits {
             "name": "coprocessorTxSenderAddresses",
             "type": "address[]",
             "internalType": "address[]"
+          },
+          {
+            "name": "coprocessorContextId",
+            "type": "uint256",
+            "internalType": "uint256"
           }
         ]
       }
@@ -427,7 +439,7 @@ pub mod ICiphertextCommits {
     #[derive(serde::Serialize, serde::Deserialize)]
     #[derive(Default, Debug, PartialEq, Eq, Hash)]
     /**```solidity
-struct CiphertextMaterial { bytes32 ctHandle; uint256 keyId; bytes32 ciphertextDigest; address[] coprocessorTxSenderAddresses; }
+struct CiphertextMaterial { bytes32 ctHandle; uint256 keyId; bytes32 ciphertextDigest; address[] coprocessorTxSenderAddresses; uint256 coprocessorContextId; }
 ```*/
     #[allow(non_camel_case_types, non_snake_case, clippy::pub_underscore_fields)]
     #[derive(Clone)]
@@ -442,6 +454,8 @@ struct CiphertextMaterial { bytes32 ctHandle; uint256 keyId; bytes32 ciphertextD
         pub coprocessorTxSenderAddresses: alloy::sol_types::private::Vec<
             alloy::sol_types::private::Address,
         >,
+        #[allow(missing_docs)]
+        pub coprocessorContextId: alloy::sol_types::private::primitives::aliases::U256,
     }
     #[allow(
         non_camel_case_types,
@@ -457,6 +471,7 @@ struct CiphertextMaterial { bytes32 ctHandle; uint256 keyId; bytes32 ciphertextD
             alloy::sol_types::sol_data::Uint<256>,
             alloy::sol_types::sol_data::FixedBytes<32>,
             alloy::sol_types::sol_data::Array<alloy::sol_types::sol_data::Address>,
+            alloy::sol_types::sol_data::Uint<256>,
         );
         #[doc(hidden)]
         type UnderlyingRustTuple<'a> = (
@@ -464,6 +479,7 @@ struct CiphertextMaterial { bytes32 ctHandle; uint256 keyId; bytes32 ciphertextD
             alloy::sol_types::private::primitives::aliases::U256,
             alloy::sol_types::private::FixedBytes<32>,
             alloy::sol_types::private::Vec<alloy::sol_types::private::Address>,
+            alloy::sol_types::private::primitives::aliases::U256,
         );
         #[cfg(test)]
         #[allow(dead_code, unreachable_patterns)]
@@ -485,6 +501,7 @@ struct CiphertextMaterial { bytes32 ctHandle; uint256 keyId; bytes32 ciphertextD
                     value.keyId,
                     value.ciphertextDigest,
                     value.coprocessorTxSenderAddresses,
+                    value.coprocessorContextId,
                 )
             }
         }
@@ -497,6 +514,7 @@ struct CiphertextMaterial { bytes32 ctHandle; uint256 keyId; bytes32 ciphertextD
                     keyId: tuple.1,
                     ciphertextDigest: tuple.2,
                     coprocessorTxSenderAddresses: tuple.3,
+                    coprocessorContextId: tuple.4,
                 }
             }
         }
@@ -523,6 +541,9 @@ struct CiphertextMaterial { bytes32 ctHandle; uint256 keyId; bytes32 ciphertextD
                     > as alloy_sol_types::SolType>::tokenize(
                         &self.coprocessorTxSenderAddresses,
                     ),
+                    <alloy::sol_types::sol_data::Uint<
+                        256,
+                    > as alloy_sol_types::SolType>::tokenize(&self.coprocessorContextId),
                 )
             }
             #[inline]
@@ -597,7 +618,7 @@ struct CiphertextMaterial { bytes32 ctHandle; uint256 keyId; bytes32 ciphertextD
             #[inline]
             fn eip712_root_type() -> alloy_sol_types::private::Cow<'static, str> {
                 alloy_sol_types::private::Cow::Borrowed(
-                    "CiphertextMaterial(bytes32 ctHandle,uint256 keyId,bytes32 ciphertextDigest,address[] coprocessorTxSenderAddresses)",
+                    "CiphertextMaterial(bytes32 ctHandle,uint256 keyId,bytes32 ciphertextDigest,address[] coprocessorTxSenderAddresses,uint256 coprocessorContextId)",
                 )
             }
             #[inline]
@@ -633,6 +654,12 @@ struct CiphertextMaterial { bytes32 ctHandle; uint256 keyId; bytes32 ciphertextD
                             &self.coprocessorTxSenderAddresses,
                         )
                         .0,
+                    <alloy::sol_types::sol_data::Uint<
+                        256,
+                    > as alloy_sol_types::SolType>::eip712_data_word(
+                            &self.coprocessorContextId,
+                        )
+                        .0,
                 ]
                     .concat()
             }
@@ -659,6 +686,11 @@ struct CiphertextMaterial { bytes32 ctHandle; uint256 keyId; bytes32 ciphertextD
                         alloy::sol_types::sol_data::Address,
                     > as alloy_sol_types::EventTopic>::topic_preimage_length(
                         &rust.coprocessorTxSenderAddresses,
+                    )
+                    + <alloy::sol_types::sol_data::Uint<
+                        256,
+                    > as alloy_sol_types::EventTopic>::topic_preimage_length(
+                        &rust.coprocessorContextId,
                     )
             }
             #[inline]
@@ -693,6 +725,12 @@ struct CiphertextMaterial { bytes32 ctHandle; uint256 keyId; bytes32 ciphertextD
                     &rust.coprocessorTxSenderAddresses,
                     out,
                 );
+                <alloy::sol_types::sol_data::Uint<
+                    256,
+                > as alloy_sol_types::EventTopic>::encode_topic_preimage(
+                    &rust.coprocessorContextId,
+                    out,
+                );
             }
             #[inline]
             fn encode_topic(
@@ -712,7 +750,7 @@ struct CiphertextMaterial { bytes32 ctHandle; uint256 keyId; bytes32 ciphertextD
     #[derive(serde::Serialize, serde::Deserialize)]
     #[derive(Default, Debug, PartialEq, Eq, Hash)]
     /**```solidity
-struct SnsCiphertextMaterial { bytes32 ctHandle; uint256 keyId; bytes32 snsCiphertextDigest; address[] coprocessorTxSenderAddresses; }
+struct SnsCiphertextMaterial { bytes32 ctHandle; uint256 keyId; bytes32 snsCiphertextDigest; address[] coprocessorTxSenderAddresses; uint256 coprocessorContextId; }
 ```*/
     #[allow(non_camel_case_types, non_snake_case, clippy::pub_underscore_fields)]
     #[derive(Clone)]
@@ -727,6 +765,8 @@ struct SnsCiphertextMaterial { bytes32 ctHandle; uint256 keyId; bytes32 snsCiphe
         pub coprocessorTxSenderAddresses: alloy::sol_types::private::Vec<
             alloy::sol_types::private::Address,
         >,
+        #[allow(missing_docs)]
+        pub coprocessorContextId: alloy::sol_types::private::primitives::aliases::U256,
     }
     #[allow(
         non_camel_case_types,
@@ -742,6 +782,7 @@ struct SnsCiphertextMaterial { bytes32 ctHandle; uint256 keyId; bytes32 snsCiphe
             alloy::sol_types::sol_data::Uint<256>,
             alloy::sol_types::sol_data::FixedBytes<32>,
             alloy::sol_types::sol_data::Array<alloy::sol_types::sol_data::Address>,
+            alloy::sol_types::sol_data::Uint<256>,
         );
         #[doc(hidden)]
         type UnderlyingRustTuple<'a> = (
@@ -749,6 +790,7 @@ struct SnsCiphertextMaterial { bytes32 ctHandle; uint256 keyId; bytes32 snsCiphe
             alloy::sol_types::private::primitives::aliases::U256,
             alloy::sol_types::private::FixedBytes<32>,
             alloy::sol_types::private::Vec<alloy::sol_types::private::Address>,
+            alloy::sol_types::private::primitives::aliases::U256,
         );
         #[cfg(test)]
         #[allow(dead_code, unreachable_patterns)]
@@ -770,6 +812,7 @@ struct SnsCiphertextMaterial { bytes32 ctHandle; uint256 keyId; bytes32 snsCiphe
                     value.keyId,
                     value.snsCiphertextDigest,
                     value.coprocessorTxSenderAddresses,
+                    value.coprocessorContextId,
                 )
             }
         }
@@ -782,6 +825,7 @@ struct SnsCiphertextMaterial { bytes32 ctHandle; uint256 keyId; bytes32 snsCiphe
                     keyId: tuple.1,
                     snsCiphertextDigest: tuple.2,
                     coprocessorTxSenderAddresses: tuple.3,
+                    coprocessorContextId: tuple.4,
                 }
             }
         }
@@ -808,6 +852,9 @@ struct SnsCiphertextMaterial { bytes32 ctHandle; uint256 keyId; bytes32 snsCiphe
                     > as alloy_sol_types::SolType>::tokenize(
                         &self.coprocessorTxSenderAddresses,
                     ),
+                    <alloy::sol_types::sol_data::Uint<
+                        256,
+                    > as alloy_sol_types::SolType>::tokenize(&self.coprocessorContextId),
                 )
             }
             #[inline]
@@ -882,7 +929,7 @@ struct SnsCiphertextMaterial { bytes32 ctHandle; uint256 keyId; bytes32 snsCiphe
             #[inline]
             fn eip712_root_type() -> alloy_sol_types::private::Cow<'static, str> {
                 alloy_sol_types::private::Cow::Borrowed(
-                    "SnsCiphertextMaterial(bytes32 ctHandle,uint256 keyId,bytes32 snsCiphertextDigest,address[] coprocessorTxSenderAddresses)",
+                    "SnsCiphertextMaterial(bytes32 ctHandle,uint256 keyId,bytes32 snsCiphertextDigest,address[] coprocessorTxSenderAddresses,uint256 coprocessorContextId)",
                 )
             }
             #[inline]
@@ -918,6 +965,12 @@ struct SnsCiphertextMaterial { bytes32 ctHandle; uint256 keyId; bytes32 snsCiphe
                             &self.coprocessorTxSenderAddresses,
                         )
                         .0,
+                    <alloy::sol_types::sol_data::Uint<
+                        256,
+                    > as alloy_sol_types::SolType>::eip712_data_word(
+                            &self.coprocessorContextId,
+                        )
+                        .0,
                 ]
                     .concat()
             }
@@ -944,6 +997,11 @@ struct SnsCiphertextMaterial { bytes32 ctHandle; uint256 keyId; bytes32 snsCiphe
                         alloy::sol_types::sol_data::Address,
                     > as alloy_sol_types::EventTopic>::topic_preimage_length(
                         &rust.coprocessorTxSenderAddresses,
+                    )
+                    + <alloy::sol_types::sol_data::Uint<
+                        256,
+                    > as alloy_sol_types::EventTopic>::topic_preimage_length(
+                        &rust.coprocessorContextId,
                     )
             }
             #[inline]
@@ -976,6 +1034,12 @@ struct SnsCiphertextMaterial { bytes32 ctHandle; uint256 keyId; bytes32 snsCiphe
                     alloy::sol_types::sol_data::Address,
                 > as alloy_sol_types::EventTopic>::encode_topic_preimage(
                     &rust.coprocessorTxSenderAddresses,
+                    out,
+                );
+                <alloy::sol_types::sol_data::Uint<
+                    256,
+                > as alloy_sol_types::EventTopic>::encode_topic_preimage(
+                    &rust.coprocessorContextId,
                     out,
                 );
             }

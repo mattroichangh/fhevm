@@ -36,6 +36,7 @@ describe("Mock contracts", function () {
     keyId: DefaultUint256,
     snsCiphertextDigest: DefaultBytes32,
     coprocessorTxSenderAddresses: EmptyArray,
+    coprocessorContextId: DefaultUint256,
   };
 
   const DefaultProtocolMetadata = { name: DefaultString, website: DefaultString };

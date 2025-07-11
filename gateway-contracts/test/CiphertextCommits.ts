@@ -42,7 +42,7 @@ describe("CiphertextCommits", function () {
   const ciphertextDigest = createBytes32();
   const snsCiphertextDigest = createBytes32();
 
-  // Define the first context ID
+  // Define the first coprocessor context ID
   const contextId = 1;
 
   // Define fake values
@@ -359,7 +359,7 @@ describe("CiphertextCommits", function () {
       const result = await ciphertextCommits.getCiphertextMaterials([ctHandle]);
 
       expect(result).to.be.deep.eq([
-        [ctHandle, keyId, ciphertextDigest, usedCoprocessorTxSender.map((s) => s.address)],
+        [ctHandle, keyId, ciphertextDigest, usedCoprocessorTxSender.map((s) => s.address), contextId],
       ]);
     });
 
@@ -368,7 +368,7 @@ describe("CiphertextCommits", function () {
 
       // The consensus has been reached with only 2 coprocessors
       expect(resultTx1).to.be.deep.eq([
-        [ctHandle, keyId, ciphertextDigest, usedCoprocessorTxSender.map((s) => s.address)],
+        [ctHandle, keyId, ciphertextDigest, usedCoprocessorTxSender.map((s) => s.address), contextId],
       ]);
 
       // Trigger a "late" call with valid inputs, after the consensus has been reached
@@ -385,7 +385,7 @@ describe("CiphertextCommits", function () {
         ...usedCoprocessorTxSender.map((s) => s.address),
         unusedCoprocessorTxSender.address,
       ];
-      expect(resultTx2).to.be.deep.eq([[ctHandle, keyId, ciphertextDigest, expectedTxSenderAddresses]]);
+      expect(resultTx2).to.be.deep.eq([[ctHandle, keyId, ciphertextDigest, expectedTxSenderAddresses, contextId]]);
     });
 
     it("Should revert with CiphertextMaterialNotFound (regular)", async function () {
@@ -398,7 +398,7 @@ describe("CiphertextCommits", function () {
       const result = await ciphertextCommits.getSnsCiphertextMaterials([ctHandle]);
 
       expect(result).to.be.deep.eq([
-        [ctHandle, keyId, snsCiphertextDigest, usedCoprocessorTxSender.map((s) => s.address)],
+        [ctHandle, keyId, snsCiphertextDigest, usedCoprocessorTxSender.map((s) => s.address), contextId],
       ]);
     });
 
@@ -407,7 +407,7 @@ describe("CiphertextCommits", function () {
 
       // The consensus has been reached with only 2 coprocessors
       expect(result).to.be.deep.eq([
-        [ctHandle, keyId, snsCiphertextDigest, usedCoprocessorTxSender.map((s) => s.address)],
+        [ctHandle, keyId, snsCiphertextDigest, usedCoprocessorTxSender.map((s) => s.address), contextId],
       ]);
 
       // Trigger a "late" call with valid inputs, after the consensus has been reached
@@ -424,7 +424,7 @@ describe("CiphertextCommits", function () {
         ...usedCoprocessorTxSender.map((s) => s.address),
         unusedCoprocessorTxSender.address,
       ];
-      expect(resultTx2).to.be.deep.eq([[ctHandle, keyId, snsCiphertextDigest, expectedTxSenderAddresses]]);
+      expect(resultTx2).to.be.deep.eq([[ctHandle, keyId, snsCiphertextDigest, expectedTxSenderAddresses, contextId]]);
     });
 
     it("Should revert with CiphertextMaterialNotFound (SNS)", async function () {
